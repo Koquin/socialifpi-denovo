@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-BR">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Social IFPI</title>
-    <link rel="stylesheet" href="estilos.css">
+    <link rel="stylesheet" href="estilos.css" />
 </head>
 
 <body>
@@ -13,7 +13,8 @@
         <header>
             <h1>Social IFPI</h1>
             <p>Bem-vindo ao blog de tecnologia e inovação do IFPI</p>
-            <nav>
+            <!-- Menu fica aqui e começa oculto -->
+            <nav id="menuNavegacao" style="display: none;">
                 <ul>
                     <li><a href="#">Home</a></li>
                     <li><a href="#">Sobre</a></li>
@@ -23,31 +24,53 @@
                 </ul>
             </nav>
         </header>
-        <main>
+
+        <!-- Área de autenticação -->
+        <section id="autenticacao">
+            <h1 class="titulo-auth">FAÇA LOGIN OU CADASTRE-SE</h1>
+
+            <!-- Formulário de Login -->
+            <div class="campos" id="loginForm">
+                <h2>Login</h2>
+                <input type="text" id="usuario" placeholder="Usuário" required />
+                <input type="password" id="senha" placeholder="Senha" required />
+                <button id="botaoLogin">Entrar</button>
+                <p>Não tem conta? <a href="#" id="mostrarCadastro">Registre-se</a></p>
+            </div>
+
+            <!-- Formulário de Cadastro -->
+            <div class="campos" id="cadastroForm" style="display: none;">
+                <h2>Cadastro</h2>
+                <input type="text" id="novoUsuario" placeholder="Novo usuário" required />
+                <input type="password" id="novaSenha" placeholder="Nova senha" required />
+                <button id="botaoCadastro">Cadastrar</button>
+                <p>Já tem conta? <a href="#" id="mostrarLogin">Faça login</a></p>
+            </div>
+        </section>
+
+        <!-- Área principal após login -->
+        <main id="areaPrincipal" style="display: none;">
             <section id="formulario">
-                
-                <div class = "campos">
+                <div class="campos">
                     <h2>Nova Postagem</h2>
                     <label for="titulo">Título:</label>
-                    <input type="text" id="titulo" name="titulo" required>
-                    <br>
+                    <input type="text" id="titulo" name="titulo" required />
+                    <br />
                     <label for="conteudo">Conteúdo:</label>
                     <textarea id="conteudo" name="conteudo" required></textarea>
-                    <br>
+                    <br />
                     <button id="botaoNovaPostagem">Incluir Postagem</button>
                 </div>
-                
             </section>
-
-            <section id="postagens">
-                <!-- As postagens serão inseridas aqui dinamicamente -->
-            </section>
+            <section id="postagens"></section>
         </main>
+
         <footer>
-            <p>&copy; 2024 Social IFPI. Todos os direitos reservados.</p>
-            <p>Feito com ♥ pela equipe do IFPI.</p>
+            <p>&copy; 2025 Social IFPI. Todos os direitos reservados.</p>
+            <p>Feito com ♡ pela equipe do IFPI.</p>
         </footer>
     </div>
+
     <script src="app.js"></script>
 </body>
 

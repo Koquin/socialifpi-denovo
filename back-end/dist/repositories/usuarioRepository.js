@@ -1,0 +1,26 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.remove = exports.update = exports.findById = exports.findAll = exports.create = void 0;
+const Usuario_1 = require("../models/Usuario");
+const create = async (userData) => {
+    const novoUsuario = new Usuario_1.Usuario(userData);
+    return await novoUsuario.save();
+};
+exports.create = create;
+const findAll = async () => {
+    return await Usuario_1.Usuario.find().select('-senha');
+};
+exports.findAll = findAll;
+const findById = async (id) => {
+    return await Usuario_1.Usuario.findById(id).select('-senha');
+};
+exports.findById = findById;
+const update = async (id, updateData) => {
+    return await Usuario_1.Usuario.findByIdAndUpdate(id, updateData, { new: true }).select('-senha');
+};
+exports.update = update;
+const remove = async (id) => {
+    return await Usuario_1.Usuario.findByIdAndDelete(id).select('-senha');
+};
+exports.remove = remove;
+//# sourceMappingURL=usuarioRepository.js.map
