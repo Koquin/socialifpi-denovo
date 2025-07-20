@@ -1,6 +1,10 @@
+// app.ts
+
 import 'dotenv/config';
 import express from 'express';
 import mongoose from 'mongoose';
+import cors from 'cors'; // <-- Importe o pacote cors
+
 import postagemRoutes from './routes/postagemRoutes';
 import usuarioRoutes from './routes/usuarioRoutes';
 
@@ -16,13 +20,17 @@ const connectDB = async () => {
     }
 };
 
+// Adicione o middleware cors aqui
+app.use(cors());
+
+// Middleware: Permite que o Express leia o corpo das requisições JSON
 app.use(express.json());
 
-// Mapeamento das rotas base para os seus roteadores
+// Defina as rotas base
 app.use('/postagem', postagemRoutes);
 app.use('/usuario', usuarioRoutes);
 
-const port = process.env.PORT || 8080;
+const port = process.env.PORT || 3000;
 
 connectDB().then(() => {
     app.listen(port, () => {
