@@ -7,7 +7,10 @@ export interface IPostagem extends Document {
   autor: string;
   data: Date;
   comentarios: IComentario[];
+  curtidas: number;
+  compartilhadaDe?: mongoose.Types.ObjectId | null;
 }
+
 
 export interface IComentario {
   body: string;
@@ -48,6 +51,12 @@ const PostagemSchema = new Schema({
       },
     },
   ],
+  compartilhadaDe: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Postagem',
+    default: null,
+  },
 });
+
 
 export const Postagem = mongoose.model<IPostagem>('Postagem', PostagemSchema);

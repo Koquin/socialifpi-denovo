@@ -3,16 +3,28 @@ import { ICreatePostagemDto, IUpdatePostagemDto } from '../repositories/postagem
 import * as postagemRepository from '../repositories/postagemRepository';
 import { AuthenticatedRequest } from '../middlewares/authMiddleware';
 import { Types } from 'mongoose'; 
+import { Postagem } from '../models/Postagem';
 
 // GET /postagens
 export const getAllPosts = async (req: Request, res: Response) => {
     try {
-        const postagens = await postagemRepository.findAll();
+        const postagens = await Postagem.find()
+            .populate('autor', 'nome')
+            .populate({
+                path: 'compartilhadaDe',
+                populate: {
+                    path: 'autor',
+                    select: 'nome'
+                }
+            })
+            .sort({ data: -1 }); // opcional: mais recentes primeiro
+
         res.status(200).json(postagens);
     } catch (error) {
         res.status(500).json({ message: 'Erro ao buscar postagens', error });
     }
 };
+
 
 // GET /postagens/:id
 export const getPostById = async (req: Request, res: Response) => {
@@ -77,3 +89,36 @@ export const deletePost = async (req: Request, res: Response) => {
         res.status(500).json({ message: 'Erro ao remover postagem', error });
     }
 };
+
+// POST /compartilhar/:id
+export const compartilharPostagem = async (req: Request, res: Response) => {
+    try {
+        const idPostagem = req.params.id;
+        const idUsuario = req.body.id;
+
+        if (!idUsuario) {
+            return res.status(400).json({ mensagem: 'ID do usuário é obrigatório.' });
+        }
+
+        const original = await Postagem.findById(idPostagem);
+        if (!original) {
+            return res.status(404).json({ mensagem: 'Postagem original não encontrada.' });
+        }
+
+        const origem = original.compartilhadaDe || original._id;
+
+        const novaPostagem = new Postagem({
+            titulo: original.titulo,
+            conteudo: original.conteudo,
+            autor: idUsuario,
+            compartilhadaDe: origem,
+        });
+
+        await novaPostagem.save();
+
+        res.status(201).json({ mensagem: 'Postagem compartilhada com sucesso!', novaPostagem });
+    } catch (erro) {
+        res.status(500).json({ erro: 'Erro ao compartilhar postagem.' });
+    }
+};
+

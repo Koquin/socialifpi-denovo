@@ -121,66 +121,80 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    // LISTAR POSTAGENS
-    async function listarPostagens() {
-        console.log(localStorage);
-        try {
-            console.log("Iniciando listagem de postagens...");
-            console.log(localStorage.getItem('token'));
-            console.log(endpointPostagens);
-            const resposta = await fetch(endpointPostagens, {
-                headers: {
-                    'Authorization': 'Bearer ' + localStorage.getItem('token')  // manda token no header
-                }
-            });
-            console.log(resposta)
-            if (!resposta.ok) {
-                throw new Error(`HTTP error! status: ${resposta.status}`);
+ async function listarPostagens() {
+    console.log(localStorage);
+    try {
+        console.log("Iniciando listagem de postagens...");
+        console.log(localStorage.getItem('token'));
+        console.log(endpointPostagens);
+
+        const resposta = await fetch(endpointPostagens, {
+            headers: {
+                'Authorization': 'Bearer ' + localStorage.getItem('token')
             }
-            const dados = await resposta.json();
-            console.log("Dados recebidos:", dados);
-            // Print do usuário logado
-            if (dados.usuario) {
-                console.log("Usuário logado:");
-                console.log("ID:", dados.usuario.id);
-                console.log("Nome:", dados.usuario.nome);
-                console.log("Email:", dados.usuario.email);
-            } else {
-                console.log("Usuário não encontrado na resposta.");
-            }
+        });
 
-            const postagens = dados; // <-- Agora, 'dados' JÁ É o array de postagens
-            console.log("Postagens recebidas:", postagens);
-
-            const container = document.getElementById("postagens");
-            container.innerHTML = "";
-
-            postagens.forEach((postagem, index) => {
-                console.log(`Processando postagem #${index + 1}:`, postagem);
-
-                const article = document.createElement("article");
-
-                const titulo = document.createElement("h3");
-                titulo.textContent = postagem.titulo;
-
-                const conteudo = document.createElement("p");
-                conteudo.textContent = postagem.conteudo;
-
-                const data = document.createElement("small");
-                data.textContent = new Date(postagem.createdAt).toLocaleString();
-
-                const autor = document.createElement("p");
-                autor.textContent = `Autor: ${postagem.autor?.nome || "Desconhecido"}`;
-
-                article.append(titulo, conteudo, data, autor);
-                container.appendChild(article);
-            });
-
-            console.log("Listagem de postagens finalizada.");
-        } catch (erro) {
-            console.error("Erro ao listar postagens:", erro);
+        console.log(resposta);
+        if (!resposta.ok) {
+            throw new Error(`HTTP error! status: ${resposta.status}`);
         }
+
+        const postagens = await resposta.json();
+        console.log("Postagens recebidas:", postagens);
+
+        const container = document.getElementById("postagens");
+        container.innerHTML = "";
+
+        postagens.forEach((postagem, index) => {
+            console.log(`Processando postagem #${index + 1}:`, postagem);
+
+            const article = document.createElement("article");
+
+            const titulo = document.createElement("h3");
+            const conteudo = document.createElement("p");
+            const data = document.createElement("small");
+            const infoAutor = document.createElement("p");
+            const botaoCompartilhar = document.createElement("button");
+
+            const compartilhada = postagem.compartilhadaDe != null;
+
+            const nomeAutor = postagem.autor?.nome || "Desconhecido";
+            const nomeOriginal = postagem.compartilhadaDe?.autor?.nome || "Desconhecido";
+            const tituloOriginal = postagem.compartilhadaDe?.titulo || postagem.titulo;
+            const conteudoOriginal = postagem.compartilhadaDe?.conteudo || postagem.conteudo;
+
+            // Título
+            titulo.textContent = compartilhada
+                ? `[Compartilhado] ${tituloOriginal}`
+                : postagem.titulo;
+
+            // Conteúdo
+            conteudo.textContent = compartilhada ? conteudoOriginal : postagem.conteudo;
+
+            // Data
+            data.textContent = new Date(postagem.createdAt || postagem.data).toLocaleString();
+
+            // Autor ou Compartilhamento
+            if (compartilhada) {
+                infoAutor.textContent = `Compartilhado por: ${nomeAutor} (original de ${nomeOriginal})`;
+            } else {
+                infoAutor.textContent = `Autor: ${nomeAutor}`;
+            }
+
+            // Botão de compartilhar
+            botaoCompartilhar.textContent = "Compartilhar";
+            botaoCompartilhar.addEventListener("click", () => compartilharPostagem(postagem._id));
+
+            article.append(titulo, conteudo, data, infoAutor, botaoCompartilhar);
+            container.appendChild(article);
+        });
+
+        console.log("Listagem de postagens finalizada.");
+    } catch (erro) {
+        console.error("Erro ao listar postagens:", erro);
     }
+}
+
 
     // LOGOUT
     botaoLogout.addEventListener("click", () => {
@@ -207,4 +221,37 @@ document.addEventListener("DOMContentLoaded", () => {
 
         listarPostagens();
     }
+
+async function compartilharPostagem(idPostagem) {
+    const idUsuario = localStorage.getItem("id");
+
+    if (!idUsuario) {
+        alert("Usuário não autenticado.");
+        return;
+    }
+
+    try {
+        const resposta = await fetch(`${endpointPostagens}/compartilhar/${idPostagem}`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": "Bearer " + localStorage.getItem("token")
+            },
+            body: JSON.stringify({ id: idUsuario }) // <-- Aqui o campo é 'id'
+        });
+
+        if (!resposta.ok) {
+            const erro = await resposta.json();
+            throw new Error(erro.mensagem || "Erro ao compartilhar.");
+        }
+
+        alert("Postagem compartilhada com sucesso!");
+        listarPostagens(); // Atualiza a lista
+    } catch (erro) {
+        console.error("Erro ao compartilhar postagem:", erro);
+        alert("Erro ao compartilhar. Tente novamente.");
+    }
+}
+
+
 });

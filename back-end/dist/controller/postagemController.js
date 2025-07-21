@@ -15,31 +15,31 @@ var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (
 }) : function(o, v) {
     o["default"] = v;
 });
-var __importStar = (this && this.__importStar) || (function () {
-    var ownKeys = function(o) {
-        ownKeys = Object.getOwnPropertyNames || function (o) {
-            var ar = [];
-            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
-            return ar;
-        };
-        return ownKeys(o);
-    };
-    return function (mod) {
-        if (mod && mod.__esModule) return mod;
-        var result = {};
-        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
-        __setModuleDefault(result, mod);
-        return result;
-    };
-})();
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deletePost = exports.updatePost = exports.createPost = exports.getPostById = exports.getAllPosts = void 0;
+exports.compartilharPostagem = exports.deletePost = exports.updatePost = exports.createPost = exports.getPostById = exports.getAllPosts = void 0;
 const postagemRepository = __importStar(require("../repositories/postagemRepository"));
 const mongoose_1 = require("mongoose");
+const Postagem_1 = require("../models/Postagem");
 // GET /postagens
 const getAllPosts = async (req, res) => {
     try {
-        const postagens = await postagemRepository.findAll();
+        const postagens = await Postagem_1.Postagem.find()
+            .populate('autor', 'nome')
+            .populate({
+            path: 'compartilhadaDe',
+            populate: {
+                path: 'autor',
+                select: 'nome'
+            }
+        })
+            .sort({ data: -1 }); // opcional: mais recentes primeiro
         res.status(200).json(postagens);
     }
     catch (error) {
@@ -112,4 +112,31 @@ const deletePost = async (req, res) => {
     }
 };
 exports.deletePost = deletePost;
+// POST /compartilhar/:id
+const compartilharPostagem = async (req, res) => {
+    try {
+        const idPostagem = req.params.id;
+        const idUsuario = req.body.id;
+        if (!idUsuario) {
+            return res.status(400).json({ mensagem: 'ID do usuário é obrigatório.' });
+        }
+        const original = await Postagem_1.Postagem.findById(idPostagem);
+        if (!original) {
+            return res.status(404).json({ mensagem: 'Postagem original não encontrada.' });
+        }
+        const origem = original.compartilhadaDe || original._id;
+        const novaPostagem = new Postagem_1.Postagem({
+            titulo: original.titulo,
+            conteudo: original.conteudo,
+            autor: idUsuario,
+            compartilhadaDe: origem,
+        });
+        await novaPostagem.save();
+        res.status(201).json({ mensagem: 'Postagem compartilhada com sucesso!', novaPostagem });
+    }
+    catch (erro) {
+        res.status(500).json({ erro: 'Erro ao compartilhar postagem.' });
+    }
+};
+exports.compartilharPostagem = compartilharPostagem;
 //# sourceMappingURL=postagemController.js.map
