@@ -32,7 +32,7 @@
             <!-- Formulário de Login -->
             <div class="campos" id="loginForm">
                 <h2>Login</h2>
-                <input type="text" id="usuario" placeholder="Usuário" required />
+                <input type="email" id="email" placeholder="Email" required />
                 <input type="password" id="senha" placeholder="Senha" required />
                 <button id="botaoLogin">Entrar</button>
                 <p>Não tem conta? <a href="#" id="mostrarCadastro">Registre-se</a></p>
@@ -41,11 +41,13 @@
             <!-- Formulário de Cadastro -->
             <div class="campos" id="cadastroForm" style="display: none;">
                 <h2>Cadastro</h2>
-                <input type="text" id="novoUsuario" placeholder="Novo usuário" required />
-                <input type="password" id="novaSenha" placeholder="Nova senha" required />
+                <input type="text" id="novoUsuario" placeholder="Nome" required />
+                <input type="email" id="novoEmail" placeholder="Email" required />
+                <input type="password" id="novaSenha" placeholder="Senha" required />
                 <button id="botaoCadastro">Cadastrar</button>
                 <p>Já tem conta? <a href="#" id="mostrarLogin">Faça login</a></p>
             </div>
+
         </section>
 
         <!-- Área principal após login -->
