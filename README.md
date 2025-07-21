@@ -49,7 +49,7 @@ Este é o projeto final da disciplina **Programação para Internet I**, desenvo
 
 ## 🎥 Demonstração em Vídeo
 
-🔗 **Link do vídeo**: [https://youtu.be/SEU_VIDEO](https://youtu.be/SEU_VIDEO)
+🔗 **Link do vídeo**: 
 
 ---
 
