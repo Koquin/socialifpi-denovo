@@ -2,6 +2,42 @@ import { Request, Response } from 'express';
 import * as usuarioRepository from '../repositories/usuarioRepository';
 import { ICreateUsuarioDto, IUpdateUsuarioDto } from '../repositories/usuarioRepository';
 
+
+
+/// POST /usuarios/login
+export const loginUser = async (req: Request, res: Response) => {
+    console.log('POST /usuarios/login: Tentativa de login.');
+    try {
+        const { email, senha } = req.body;
+
+        if (!email || !senha) {
+            return res.status(400).json({ mensagem: 'Email e senha são obrigatórios.' });
+        }
+
+        // Busca usuário pelo email 
+        const usuario = await usuarioRepository.findByEmail(email);
+
+        if (!usuario) {
+            console.log('POST /usuarios/login: Usuário não encontrado.');
+            return res.status(401).json({ mensagem: 'Usuário não encontrado.' });
+        }
+
+        // Verifica senha (se ainda for texto puro)
+        if (usuario.senha !== senha) {
+            console.log('POST /usuarios/login: Senha incorreta.');
+            return res.status(401).json({ mensagem: 'Senha incorreta.' });
+        }
+
+        // Login OK
+        console.log('POST /usuarios/login: Login efetuado com sucesso.');
+        return res.json({ autenticado: true, mensagem: 'Login efetuado com sucesso.' });
+
+    } catch (error) {
+        console.error('POST /usuarios/login: Erro no login:', error);
+        return res.status(500).json({ mensagem: 'Erro no servidor.' });
+    }
+};
+
 // GET /usuarios
 export const getAllUsers = async (req: Request, res: Response) => {
     console.log('GET /usuarios: Buscando todos os usuários...');

@@ -9,8 +9,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const apiUrl = 'http://localhost:8080';
 
     // ENDPOINTS
-    const endpointCadastro = apiUrl + '/usuario/';
-    const endpointLogin = apiUrl + '/login';
+    const endpointCadastro = apiUrl + '/usuarios/';
+    const endpointLogin = apiUrl + '/usuarios/login';
 
     // LISTAR POSTAGENS
     async function listarPostagens() {
@@ -100,19 +100,15 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // CADASTRAR USUÁRIO NA API
-    async function salvarConta(nome, senha) {
-        console.log('Tentando cadastrar usuário:', nome);
+    async function salvarConta(nome, email, senha) {
         try {
-            console.log('Enviando dados para o endpoint:', endpointCadastro);
-            console.log('Dados:', { nome, senha });
             const resposta = await fetch(endpointCadastro, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ nome, senha })
+                body: JSON.stringify({ nome, email, senha })
             });
-            console.log('Resposta da API:', resposta);
+
             if (!resposta.ok) {
-                console.log('Erro na resposta da API:', resposta.status);
                 const erro = await resposta.json();
                 alert(erro.mensagem || 'Erro ao criar conta!');
                 return false;
@@ -129,12 +125,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // VERIFICAR LOGIN COM A API
-    async function verificarLogin(usuario, senha) {
+    async function verificarLogin(email, senha) {
         try {
             const resposta = await fetch(endpointLogin, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ usuario, senha })
+                body: JSON.stringify({ email, senha })  // Aqui foi corrigido para enviar email
             });
 
             if (!resposta.ok) {
@@ -171,17 +167,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Evento botão de cadastro
     getById('botaoCadastro').addEventListener('click', async () => {
-        const usuario = getById('novoUsuario').value.trim();
+        const nome = getById('novoUsuario').value.trim();
+        const email = getById('novoEmail').value.trim();
         const senha = getById('novaSenha').value.trim();
 
-        if (!usuario || !senha) {
+        if (!nome || !email || !senha) {
             alert('Preencha todos os campos!');
             return;
         }
 
-        const sucesso = await salvarConta(usuario, senha);
+        const sucesso = await salvarConta(nome, email, senha);
         if (sucesso) {
             getById('novoUsuario').value = '';
+            getById('novoEmail').value = '';
             getById('novaSenha').value = '';
             cadastroForm.style.display = 'none';
             loginForm.style.display = 'block';
@@ -190,11 +188,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Evento botão de login
     getById('botaoLogin').addEventListener('click', async () => {
-        const usuario = getById('usuario').value.trim();
+        const email = getById('email').value.trim();  // troquei 'usuario' para 'email' para mais clareza
         const senha = getById('senha').value.trim();
 
-        if (await verificarLogin(usuario, senha)) {
-            alert('Login bem-sucedido!');
+        if (await verificarLogin(email, senha)) {
             getById('autenticacao').style.display = 'none';
             getById('menuNavegacao').style.display = 'block';
             getById('areaPrincipal').style.display = 'block';
