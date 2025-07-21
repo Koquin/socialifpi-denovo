@@ -13,7 +13,8 @@
         <header>
             <h1>Social IFPI</h1>
             <p>Bem-vindo ao blog de tecnologia e inovação do IFPI</p>
-            <!-- Menu fica aqui e começa oculto -->
+
+            <!-- Menu de navegação oculto inicialmente -->
             <nav id="menuNavegacao" style="display: none;">
                 <ul>
                     <li><a href="#">Home</a></li>
@@ -23,13 +24,16 @@
                     <li><a href="#">Portfólio</a></li>
                 </ul>
             </nav>
+
+            <!-- Botão de logout, inicialmente oculto -->
+            <button id="botaoLogout" style="display: none; margin-top: 10px;">Sair</button>
         </header>
 
-        <!-- Área de autenticação -->
+        <!-- Seção de autenticação -->
         <section id="autenticacao">
             <h1 class="titulo-auth">FAÇA LOGIN OU CADASTRE-SE</h1>
 
-            <!-- Formulário de Login -->
+            <!-- Login -->
             <div class="campos" id="loginForm">
                 <h2>Login</h2>
                 <input type="email" id="email" placeholder="Email" required />
@@ -38,7 +42,7 @@
                 <p>Não tem conta? <a href="#" id="mostrarCadastro">Registre-se</a></p>
             </div>
 
-            <!-- Formulário de Cadastro -->
+            <!-- Cadastro -->
             <div class="campos" id="cadastroForm" style="display: none;">
                 <h2>Cadastro</h2>
                 <input type="text" id="novoUsuario" placeholder="Nome" required />
@@ -47,23 +51,25 @@
                 <button id="botaoCadastro">Cadastrar</button>
                 <p>Já tem conta? <a href="#" id="mostrarLogin">Faça login</a></p>
             </div>
-
         </section>
 
-        <!-- Área principal após login -->
+        <!-- Conteúdo principal (visível após login) -->
         <main id="areaPrincipal" style="display: none;">
+            <div id="usuarioLogado" style="margin-bottom: 20px; font-weight: bold;"></div>
+
             <section id="formulario">
                 <div class="campos">
                     <h2>Nova Postagem</h2>
                     <label for="titulo">Título:</label>
                     <input type="text" id="titulo" name="titulo" required />
-                    <br />
+
                     <label for="conteudo">Conteúdo:</label>
                     <textarea id="conteudo" name="conteudo" required></textarea>
-                    <br />
+
                     <button id="botaoNovaPostagem">Incluir Postagem</button>
                 </div>
             </section>
+
             <section id="postagens"></section>
         </main>
 

@@ -35,10 +35,11 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const postagemController = __importStar(require("../controller/postagemController"));
+const authMiddleware_1 = require("../middlewares/authMiddleware");
 const router = (0, express_1.Router)();
 router.get('/', postagemController.getAllPosts);
 router.get('/:id', postagemController.getPostById);
-router.post('/', postagemController.createPost);
+router.post('/', authMiddleware_1.autenticarToken, postagemController.createPost);
 router.put('/:id', postagemController.updatePost);
 router.delete('/:id', postagemController.deletePost);
 exports.default = router;

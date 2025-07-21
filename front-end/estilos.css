@@ -14,11 +14,18 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+    border-radius: 0.5rem; /* Cantos arredondados para todos os elementos */
+}
+
+html, body {
+    height: 100%; /* Garante que body e html ocupem toda a altura da viewport */
+    margin: 0;
+    padding: 0;
 }
 
 body {
-    font-family: Arial, sans-serif;
-    min-height: 100vh;
+    font-family: Arial, sans-serif; /* Mantém sua fonte */
+    min-height: 100vh; /* Essencial para o sticky footer */
     background: linear-gradient(-45deg,
         #e0faf3,
         #4d65c4d8,
@@ -29,20 +36,43 @@ body {
     animation: aurora 15s ease infinite;
     color: var(--cor-texto);
     line-height: 1.6;
+
+    /* Configuração do Flexbox para o layout principal (Sticky Footer) */
+    display: flex;
+    flex-direction: column; /* Organiza os filhos em coluna */
 }
 
 @keyframes aurora {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
 }
 
+#container {
+    width: 100%;
+    max-width: 1200px; /* Mantém a largura máxima para centralizar o conteúdo */
+    margin: 0 auto; /* Centraliza o container */
+    padding: 1rem; /* Adiciona um padding geral ao container */
+    /* Remove background-color e box-shadow daqui para que o body com gradiente seja visível */
+    display: flex; /* O container também pode ser flex para organizar seus filhos */
+    flex-direction: column;
+    flex-grow: 1; /* Permite que o container cresça e empurre o rodapé */
+}
+
+
 header {
-    background-color: #0f1d5ed1;
+    background-color: #0f1d5ed1; /* Sua cor de cabeçalho */
     color: #fff;
     padding: 20px 0;
     text-align: center;
     margin-bottom: 20px;
+    border-radius: 0.75rem; /* Mantido para arredondamento visual */
 }
 
 header h1 {
@@ -51,21 +81,21 @@ header h1 {
 
 header p {
     font-size: 1.2rem;
-    color: #DDEEFF;
+    color: #ddeeff;
 }
 
-nav ul {
+#menuNavegacao ul { /* Adicionado ID para seletor mais específico */
     display: flex;
     justify-content: center;
     list-style: none;
     padding: 10px 0;
 }
 
-nav ul li {
+#menuNavegacao ul li { /* Adicionado ID para seletor mais específico */
     margin: 0 10px;
 }
 
-nav ul li a {
+#menuNavegacao ul li a { /* Adicionado ID para seletor mais específico */
     color: #fff;
     text-decoration: none;
     padding: 5px 10px;
@@ -73,15 +103,51 @@ nav ul li a {
     transition: background-color 0.3s;
 }
 
-nav ul li a:hover {
+#menuNavegacao ul li a:hover { /* Adicionado ID para seletor mais específico */
     background-color: var(--cor-hover);
 }
 
-main {
-    max-width: 900px;
-    margin: 0 auto;
-    padding: 0 20px;
+#botaoLogout {
+    background-color: var(--cor-button); /* Usando sua variável */
+    color: #fff;
+    border: none;
+    padding: 10px 25px;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 1rem;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    box-shadow: 0 3px 6px rgba(13, 59, 102, 0.3);
+    margin-left: 15px;
+    vertical-align: middle;
+    margin-top: 10px; /* Adicionado para espaçamento */
 }
+
+#botaoLogout:hover,
+#botaoLogout:focus {
+    background-color: var(--cor-button-hover); /* Usando sua variável */
+    outline: none;
+    transform: scale(1.05);
+    box-shadow: 0 5px 10px rgba(13, 59, 102, 0.5);
+}
+
+main {
+    max-width: 900px; /* Seu estilo original */
+    margin: 0 auto; /* Seu estilo original */
+    padding: 0 20px; /* Seu estilo original */
+    flex-grow: 1; /* Permite que o main cresça e empurre o rodapé */
+}
+
+/* Seções principais para crescer e empurrar o rodapé */
+/* Aplicado a #autenticacao e #areaPrincipal, que são os conteúdos principais */
+#autenticacao,
+#areaPrincipal {
+    flex-grow: 1; /* Faz com que estas seções ocupem o espaço restante */
+    padding: 1rem; /* Adicionado padding para consistência */
+    margin-bottom: 1rem; /* Espaçamento antes do rodapé */
+}
+
 
 /* FORMULÁRIOS */
 section#formulario,
@@ -141,6 +207,13 @@ section#postagens article {
 }
 
 /* POSTAGENS */
+section#postagens {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); /* Layout responsivo de grid */
+    gap: 1.5rem; /* Espaçamento entre as postagens */
+    padding: 1rem; /* Adicionado padding para consistência */
+}
+
 section#postagens article h2 {
     color: var(--cor-texto);
     font-size: 1.75rem;
@@ -174,30 +247,22 @@ section#postagens article button:hover {
 
 /* FOOTER */
 footer {
-    background-color: #0f1d5ed1;
+    background-color: #0f1d5ed1; /* Sua cor de rodapé */
     color: #fff;
     text-align: center;
     padding: 20px 10px;
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    font-size: 0.9rem;
-    z-index: 1000;
+    /* REMOVIDO: position: fixed, bottom, left, width, z-index */
+    margin-top: auto; /* IMPORTANTE: Empurra o rodapé para o final do flex container */
+    border-radius: 0.75rem; /* Mantido para arredondamento visual */
 }
 
 footer p {
     margin: 5px 0;
 }
 
-/* PAMPIS
 /* AUTENTICAÇÃO */
 section#autenticacao {
-    height: 450px;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
+    /* Removido height, position, top, left, transform para permitir o flex-grow */
     max-width: 600px;
     width: 90%;
     padding: 20px 30px;
@@ -205,6 +270,8 @@ section#autenticacao {
     border: 1px solid var(--cor-borda);
     border-radius: 10px;
     box-shadow: 0 0 15px rgba(13, 59, 102, 0.15);
+    font-family: Arial, sans-serif;
+    margin: 20px auto; /* Centraliza a seção de autenticação */
 }
 
 #autenticacao input,
@@ -213,7 +280,7 @@ section#autenticacao {
     margin: 15px auto;
     display: block;
     padding: 12px;
-    font-size: 0.9rem;
+    font-size: 1rem;
     border-radius: 8px;
 }
 
@@ -308,18 +375,33 @@ section#autenticacao {
     cursor: default;
 }
 
+#usuarioLogado {
+    display: inline-block;
+    font-weight: 700;
+    color: var(--cor-texto-secundario);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 1.1rem;
+    margin-bottom: 20px; /* Adicionado espaçamento inferior */
+    text-align: center; /* Centraliza o texto */
+    width: 100%; /* Ocupa a largura total para centralizar */
+}
+
 /* RESPONSIVIDADE */
 @media (max-width: 768px) {
     header h1 {
         font-size: 1.8rem;
     }
 
-    nav ul {
+    #menuNavegacao ul { /* Ajustado seletor */
         flex-direction: column;
+        align-items: center;
+        padding: 0;
     }
 
-    nav ul li {
+    #menuNavegacao ul li { /* Ajustado seletor */
         margin-bottom: 10px;
+        margin-left: 0;
+        margin-right: 0;
     }
 
     main {
@@ -343,12 +425,15 @@ section#autenticacao {
         font-size: 0.95rem;
     }
 
-    nav ul {
+    #menuNavegacao ul { /* Ajustado seletor */
         flex-direction: column;
         align-items: center;
+        padding: 0;
     }
 
-    nav ul li {
+    #menuNavegacao ul li { /* Ajustado seletor */
         margin-bottom: 5px;
+        margin-left: 0;
+        margin-right: 0;
     }
 }

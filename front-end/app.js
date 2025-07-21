@@ -1,209 +1,210 @@
 "use strict";
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener("DOMContentLoaded", () => {
+    const apiUrl = "http://localhost:8080";
 
-    function getById(id) {
-        return document.getElementById(id);
+    const endpointCadastro = apiUrl + "/usuarios/";
+    const endpointLogin = apiUrl + "/usuarios/login";
+    const endpointPostagens = apiUrl + "/postagem";
+
+    const loginForm = document.getElementById("loginForm");
+    const cadastroForm = document.getElementById("cadastroForm");
+    const areaPrincipal = document.getElementById("areaPrincipal");
+    const autenticacao = document.getElementById("autenticacao");
+    const usuarioLogado = document.getElementById("usuarioLogado");
+    const menuNavegacao = document.getElementById("menuNavegacao");
+
+    const botaoLogin = document.getElementById("botaoLogin");
+    const botaoCadastro = document.getElementById("botaoCadastro");
+    const botaoNovaPostagem = document.getElementById("botaoNovaPostagem");
+    const botaoLogout = document.getElementById("botaoLogout");
+
+    // Inicialmente esconder botão logout
+    botaoLogout.style.display = "none";
+
+    // Alternar entre login e cadastro
+    document.getElementById("mostrarCadastro").addEventListener("click", (e) => {
+        e.preventDefault();
+        loginForm.style.display = "none";
+        cadastroForm.style.display = "block";
+    });
+
+    document.getElementById("mostrarLogin").addEventListener("click", (e) => {
+        e.preventDefault();
+        cadastroForm.style.display = "none";
+        loginForm.style.display = "block";
+    });
+
+    // Verifica token ao carregar a página
+    const token = localStorage.getItem("token");
+    if (token) {
+        mostrarAreaPrincipal(token);
     }
 
-    const apiUrl = 'http://localhost:8080';
+    // CADASTRO
+    botaoCadastro.addEventListener("click", async () => {
+        const nome = document.getElementById("novoUsuario").value;
+        const email = document.getElementById("novoEmail").value;
+        const senha = document.getElementById("novaSenha").value;
 
-    // ENDPOINTS
-    const endpointCadastro = apiUrl + '/usuarios/';
-    const endpointLogin = apiUrl + '/usuarios/login';
+        try {
+            const resposta = await fetch(endpointCadastro, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ nome, email, senha }),
+            });
+
+            if (!resposta.ok) {
+                throw new Error("Erro ao cadastrar usuário.");
+            }
+
+            alert("Cadastro realizado com sucesso! Faça login.");
+            cadastroForm.style.display = "none";
+            loginForm.style.display = "block";
+        } catch (erro) {
+            console.error(erro);
+            alert("Erro ao cadastrar usuário.");
+        }
+    });
+
+    // LOGIN
+    botaoLogin.addEventListener("click", async () => {
+        const email = document.getElementById("email").value;
+        const senha = document.getElementById("senha").value;
+
+        try {
+            const resposta = await fetch(endpointLogin, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email, senha }),
+            });
+            const dados = await resposta.json();
+            console.log("Dados de login:", dados);
+            if (dados.token) {
+                localStorage.setItem("id", dados.id);
+                localStorage.setItem("token", dados.token);
+                mostrarAreaPrincipal(dados.token);
+            } else {
+                alert("Credenciais inválidas.");
+            }
+        } catch (erro) {
+            console.error(erro);
+            alert("Erro ao realizar login.");
+        }
+    });
+
+    // NOVA POSTAGEM
+    botaoNovaPostagem.addEventListener("click", async () => {
+        const titulo = document.getElementById("titulo").value;
+        const conteudo = document.getElementById("conteudo").value;
+
+        try {
+            const resposta = await fetch(endpointPostagens, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${localStorage.getItem("token")}`,
+                },
+                body: JSON.stringify({ titulo, conteudo }),
+            });
+
+            if (!resposta.ok) {
+                throw new Error("Erro ao criar postagem.");
+            }
+
+            document.getElementById("titulo").value = "";
+            document.getElementById("conteudo").value = "";
+            listarPostagens();
+        } catch (erro) {
+            console.error(erro);
+            alert("Erro ao criar postagem.");
+        }
+    });
 
     // LISTAR POSTAGENS
     async function listarPostagens() {
+        console.log(localStorage);
         try {
-            const response = await fetch(apiUrl);
-            const postagens = await response.json();
-            const postagensElement = getById('postagens');
-            if (postagensElement) {
-                postagensElement.innerHTML = '';
-                postagens.forEach(postagem => {
-                    const article = document.createElement('article');
-
-                    const titulo = document.createElement('h2');
-                    titulo.textContent = postagem.titulo;
-
-                    const conteudo = document.createElement('p');
-                    conteudo.textContent = postagem.conteudo;
-
-                    const data = document.createElement('p');
-                    data.className = 'data';
-                    data.textContent = new Date(postagem.data).toLocaleDateString();
-
-                    const curtidas = document.createElement('p');
-                    curtidas.textContent = `Curtidas: ${postagem.curtidas}`;
-                    curtidas.style.fontWeight = 'bold';
-
-                    const botaoCurtir = document.createElement('button');
-                    botaoCurtir.textContent = 'Curtir';
-                    botaoCurtir.addEventListener('click', () => curtirPostagem(postagem.id, curtidas));
-
-                    article.append(titulo, conteudo, data, curtidas, botaoCurtir);
-                    postagensElement.appendChild(article);
-                });
-            }
-        } catch (error) {
-            console.error('Erro ao listar postagens:', error);
-            alert('Erro ao carregar as postagens. Tente novamente mais tarde.');
-        }
-    }
-
-    // CURTIR POSTAGEM
-    async function curtirPostagem(id, curtidasElement) {
-        try {
-            const response = await fetch(`${apiUrl}/${id}/curtir`, { method: 'POST' });
-            const result = await response.json();
-            curtidasElement.textContent = `Curtidas: ${result.curtidas}`;
-        } catch (error) {
-            console.error('Erro ao curtir postagem:', error);
-            alert('Erro ao curtir a postagem. Tente novamente mais tarde.');
-        }
-    }
-
-    // INCLUIR POSTAGEM
-    async function incluirPostagem() {
-        const tituloInput = getById('titulo');
-        const conteudoInput = getById('conteudo');
-
-        if (tituloInput && conteudoInput) {
-            const novaPostagem = {
-                titulo: tituloInput.value,
-                conteudo: conteudoInput.value,
-                data: new Date().toISOString(),
-                curtidas: 0
-            };
-
-            try {
-                const response = await fetch(apiUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(novaPostagem)
-                });
-
-                if (!response.ok) {
-                    throw new Error('Erro ao adicionar postagem');
+            console.log("Iniciando listagem de postagens...");
+            console.log(localStorage.getItem('token'));
+            console.log(endpointPostagens);
+            const resposta = await fetch(endpointPostagens, {
+                headers: {
+                    'Authorization': 'Bearer ' + localStorage.getItem('token')  // manda token no header
                 }
-
-                await listarPostagens();
-
-                tituloInput.value = '';
-                conteudoInput.value = '';
-
-            } catch (error) {
-                console.error(error);
-                alert('Erro ao adicionar postagem.');
-            }
-        }
-    }
-
-    // CADASTRAR USUÁRIO NA API
-    async function salvarConta(nome, email, senha) {
-        try {
-            const resposta = await fetch(endpointCadastro, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ nome, email, senha })
             });
-
+            console.log(resposta)
             if (!resposta.ok) {
-                const erro = await resposta.json();
-                alert(erro.mensagem || 'Erro ao criar conta!');
-                return false;
+                throw new Error(`HTTP error! status: ${resposta.status}`);
             }
-
-            alert('Conta criada com sucesso!');
-            return true;
-
-        } catch (erro) {
-            console.error('Erro ao cadastrar usuário:', erro);
-            alert('Erro ao cadastrar conta. Tente novamente mais tarde.');
-            return false;
-        }
-    }
-
-    // VERIFICAR LOGIN COM A API
-    async function verificarLogin(email, senha) {
-        try {
-            const resposta = await fetch(endpointLogin, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, senha })  // Aqui foi corrigido para enviar email
-            });
-
-            if (!resposta.ok) {
-                return false;
-            }
-
             const dados = await resposta.json();
-            return dados.autenticado === true;
+            console.log("Dados recebidos:", dados);
+            // Print do usuário logado
+            if (dados.usuario) {
+                console.log("Usuário logado:");
+                console.log("ID:", dados.usuario.id);
+                console.log("Nome:", dados.usuario.nome);
+                console.log("Email:", dados.usuario.email);
+            } else {
+                console.log("Usuário não encontrado na resposta.");
+            }
 
+            const postagens = dados.postagens;
+            console.log("Postagens recebidas:", postagens);
+
+            const container = document.getElementById("postagens");
+            container.innerHTML = "";
+
+            postagens.forEach((postagem, index) => {
+                console.log(`Processando postagem #${index + 1}:`, postagem);
+
+                const article = document.createElement("article");
+
+                const titulo = document.createElement("h3");
+                titulo.textContent = postagem.titulo;
+
+                const conteudo = document.createElement("p");
+                conteudo.textContent = postagem.conteudo;
+
+                const data = document.createElement("small");
+                data.textContent = new Date(postagem.createdAt).toLocaleString();
+
+                const autor = document.createElement("p");
+                autor.textContent = `Autor: ${postagem.autor?.nome || "Desconhecido"}`;
+
+                article.append(titulo, conteudo, data, autor);
+                container.appendChild(article);
+            });
+
+            console.log("Listagem de postagens finalizada.");
         } catch (erro) {
-            console.error('Erro ao fazer login:', erro);
-            alert('Erro ao realizar login. Tente novamente mais tarde.');
-            return false;
+            console.error("Erro ao listar postagens:", erro);
         }
     }
 
-    // AUTENTICAÇÃO (LOGIN + TROCA DE FORMULÁRIOS)
-    const loginForm = getById('loginForm');
-    const cadastroForm = getById('cadastroForm');
-
-    // Mostrar cadastro
-    getById('mostrarCadastro').addEventListener('click', e => {
-        e.preventDefault();
-        loginForm.style.display = 'none';
-        cadastroForm.style.display = 'block';
+    // LOGOUT
+    botaoLogout.addEventListener("click", () => {
+        localStorage.removeItem("token");
+        location.reload();
     });
 
-    // Mostrar login
-    getById('mostrarLogin').addEventListener('click', e => {
-        e.preventDefault();
-        cadastroForm.style.display = 'none';
-        loginForm.style.display = 'block';
-    });
+    // Mostrar área principal após login
+    function mostrarAreaPrincipal(token) {
+        autenticacao.style.display = "none";
+        areaPrincipal.style.display = "block";
+        menuNavegacao.style.display = "block";
 
-    // Evento botão de cadastro
-    getById('botaoCadastro').addEventListener('click', async () => {
-        const nome = getById('novoUsuario').value.trim();
-        const email = getById('novoEmail').value.trim();
-        const senha = getById('novaSenha').value.trim();
+        // Mostrar botão logout
+        botaoLogout.style.display = "inline-block";
 
-        if (!nome || !email || !senha) {
-            alert('Preencha todos os campos!');
-            return;
+        // Exibe o e-mail do usuário logado, decodificando token JWT
+        try {
+            const payload = JSON.parse(atob(token.split(".")[1]));
+            usuarioLogado.textContent = `Olá, ${payload.email}!`;
+        } catch {
+            usuarioLogado.textContent = "Olá, usuário!";
         }
 
-        const sucesso = await salvarConta(nome, email, senha);
-        if (sucesso) {
-            getById('novoUsuario').value = '';
-            getById('novoEmail').value = '';
-            getById('novaSenha').value = '';
-            cadastroForm.style.display = 'none';
-            loginForm.style.display = 'block';
-        }
-    });
-
-    // Evento botão de login
-    getById('botaoLogin').addEventListener('click', async () => {
-        const email = getById('email').value.trim();  // troquei 'usuario' para 'email' para mais clareza
-        const senha = getById('senha').value.trim();
-
-        if (await verificarLogin(email, senha)) {
-            getById('autenticacao').style.display = 'none';
-            getById('menuNavegacao').style.display = 'block';
-            getById('areaPrincipal').style.display = 'block';
-            listarPostagens();
-        } else {
-            alert('Usuário ou senha inválidos!');
-        }
-    });
-
-    const botaoNovaPostagem = getById('botaoNovaPostagem');
-    if (botaoNovaPostagem) {
-        botaoNovaPostagem.addEventListener('click', incluirPostagem);
+        listarPostagens();
     }
-
 });

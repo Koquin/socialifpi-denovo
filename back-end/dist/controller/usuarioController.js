@@ -32,10 +32,15 @@ var __importStar = (this && this.__importStar) || (function () {
         return result;
     };
 })();
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.deleteUser = exports.updateUser = exports.createUser = exports.getUserById = exports.getAllUsers = exports.loginUser = void 0;
 const usuarioRepository = __importStar(require("../repositories/usuarioRepository"));
-/// POST /usuarios/login
+const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
+const JWT_SECRET = process.env.JWT_SECRET || 'uma_chave_super_secreta_e_segura';
+// POST /usuarios/login
 const loginUser = async (req, res) => {
     console.log('POST /usuarios/login: Tentativa de login.');
     try {
@@ -43,20 +48,24 @@ const loginUser = async (req, res) => {
         if (!email || !senha) {
             return res.status(400).json({ mensagem: 'Email e senha são obrigatórios.' });
         }
-        // Busca usuário pelo email 
         const usuario = await usuarioRepository.findByEmail(email);
         if (!usuario) {
             console.log('POST /usuarios/login: Usuário não encontrado.');
             return res.status(401).json({ mensagem: 'Usuário não encontrado.' });
         }
-        // Verifica senha (se ainda for texto puro)
         if (usuario.senha !== senha) {
             console.log('POST /usuarios/login: Senha incorreta.');
             return res.status(401).json({ mensagem: 'Senha incorreta.' });
         }
-        // Login OK
+        const token = jsonwebtoken_1.default.sign({ id: usuario._id, email: usuario.email }, JWT_SECRET, { expiresIn: '1h' });
         console.log('POST /usuarios/login: Login efetuado com sucesso.');
-        return res.json({ autenticado: true, mensagem: 'Login efetuado com sucesso.' });
+        return res.status(200).json({
+            autenticado: true,
+            token,
+            id: usuario._id,
+            nome: usuario.nome,
+            email: usuario.email
+        });
     }
     catch (error) {
         console.error('POST /usuarios/login: Erro no login:', error);

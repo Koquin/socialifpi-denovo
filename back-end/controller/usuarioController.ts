@@ -1,10 +1,11 @@
 import { Request, Response } from 'express';
 import * as usuarioRepository from '../repositories/usuarioRepository';
 import { ICreateUsuarioDto, IUpdateUsuarioDto } from '../repositories/usuarioRepository';
+import jwt from 'jsonwebtoken'; 
 
+const JWT_SECRET = process.env.JWT_SECRET || 'uma_chave_super_secreta_e_segura';
 
-
-/// POST /usuarios/login
+// POST /usuarios/login
 export const loginUser = async (req: Request, res: Response) => {
     console.log('POST /usuarios/login: Tentativa de login.');
     try {
@@ -14,7 +15,6 @@ export const loginUser = async (req: Request, res: Response) => {
             return res.status(400).json({ mensagem: 'Email e senha são obrigatórios.' });
         }
 
-        // Busca usuário pelo email 
         const usuario = await usuarioRepository.findByEmail(email);
 
         if (!usuario) {
@@ -22,15 +22,25 @@ export const loginUser = async (req: Request, res: Response) => {
             return res.status(401).json({ mensagem: 'Usuário não encontrado.' });
         }
 
-        // Verifica senha (se ainda for texto puro)
         if (usuario.senha !== senha) {
             console.log('POST /usuarios/login: Senha incorreta.');
             return res.status(401).json({ mensagem: 'Senha incorreta.' });
         }
 
-        // Login OK
+        const token = jwt.sign(
+            { id: usuario._id, email: usuario.email },
+            JWT_SECRET,
+            { expiresIn: '1h' }
+        );
+
         console.log('POST /usuarios/login: Login efetuado com sucesso.');
-        return res.json({ autenticado: true, mensagem: 'Login efetuado com sucesso.' });
+        return res.status(200).json({
+            autenticado: true,
+            token,
+            id: usuario._id,       
+            nome: usuario.nome,
+            email: usuario.email
+        });
 
     } catch (error) {
         console.error('POST /usuarios/login: Erro no login:', error);

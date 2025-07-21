@@ -1,6 +1,8 @@
 import { Request, Response } from 'express';
 import { ICreatePostagemDto, IUpdatePostagemDto } from '../repositories/postagemRepository';
 import * as postagemRepository from '../repositories/postagemRepository';
+import { AuthenticatedRequest } from '../middlewares/authMiddleware';
+import { Types } from 'mongoose'; 
 
 // GET /postagens
 export const getAllPosts = async (req: Request, res: Response) => {
@@ -26,9 +28,22 @@ export const getPostById = async (req: Request, res: Response) => {
 };
 
 // POST /postagens
-export const createPost = async (req: Request, res: Response) => {
+export const createPost = async (req: AuthenticatedRequest, res: Response) => {
     try {
-        const postData: ICreatePostagemDto = req.body;
+        if (!req.usuarioId) {
+            return res.status(401).json({ message: 'Usuário não autenticado' });
+        }
+
+        if (!Types.ObjectId.isValid(req.usuarioId)) {
+            return res.status(400).json({ message: 'ID de usuário inválido' });
+        }
+
+        const postData: ICreatePostagemDto = {
+            titulo: req.body.titulo,
+            conteudo: req.body.conteudo,
+            autor: new Types.ObjectId(req.usuarioId) 
+        };
+
         const novaPostagem = await postagemRepository.create(postData);
         res.status(201).json(novaPostagem);
     } catch (error) {

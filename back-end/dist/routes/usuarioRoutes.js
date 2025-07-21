@@ -36,9 +36,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const usuarioController = __importStar(require("../controller/usuarioController"));
 const router = (0, express_1.Router)();
-router.get('/teste', (req, res) => {
-    res.json({ mensagem: 'Rota teste funcionando!' });
-});
 router.post('/login', usuarioController.loginUser);
 router.get('/', usuarioController.getAllUsers);
 router.get('/:id', usuarioController.getUserById);
