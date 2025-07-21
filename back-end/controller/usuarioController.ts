@@ -3,6 +3,8 @@ import * as usuarioRepository from '../repositories/usuarioRepository';
 import { ICreateUsuarioDto, IUpdateUsuarioDto } from '../repositories/usuarioRepository';
 import jwt from 'jsonwebtoken'; 
 
+const JWT_SECRET = process.env.JWT_SECRET || 'uma_chave_super_secreta_e_segura';
+
 // POST /usuarios/login
 export const loginUser = async (req: Request, res: Response) => {
     console.log('POST /usuarios/login: Tentativa de login.');
@@ -25,10 +27,9 @@ export const loginUser = async (req: Request, res: Response) => {
             return res.status(401).json({ mensagem: 'Senha incorreta.' });
         }
 
-        // Geração de token JWT
         const token = jwt.sign(
             { id: usuario._id, email: usuario.email },
-            'seuSegredoAqui', 
+            JWT_SECRET,
             { expiresIn: '1h' }
         );
 
@@ -36,6 +37,7 @@ export const loginUser = async (req: Request, res: Response) => {
         return res.status(200).json({
             autenticado: true,
             token,
+            id: usuario._id,       
             nome: usuario.nome,
             email: usuario.email
         });

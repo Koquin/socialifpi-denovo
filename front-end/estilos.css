@@ -365,3 +365,36 @@ section#autenticacao {
         margin-right: 0;
     }
 }
+
+/* Estilo personalizado para o botão de logout */
+#botaoLogout {
+    background-color: var(--cor-button);
+    color: #fff;
+    border: none;
+    padding: 10px 25px;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 1rem;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    box-shadow: 0 3px 6px rgba(13, 59, 102, 0.3);
+    margin-left: 15px; /* Espaço à esquerda para ficar separado do texto */
+    vertical-align: middle; /* Alinha com o texto ao lado */
+}
+
+#botaoLogout:hover,
+#botaoLogout:focus {
+    background-color: var(--cor-button-hover);
+    outline: none;
+    transform: scale(1.05);
+    box-shadow: 0 5px 10px rgba(13, 59, 102, 0.5);
+}
+
+#usuarioLogado {
+    display: inline-block;
+    font-weight: 700;
+    color: var(--cor-texto-secundario);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 1.1rem;
+}

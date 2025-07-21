@@ -35,6 +35,7 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.deletePost = exports.updatePost = exports.createPost = exports.getPostById = exports.getAllPosts = void 0;
 const postagemRepository = __importStar(require("../repositories/postagemRepository"));
+const mongoose_1 = require("mongoose");
 // GET /postagens
 const getAllPosts = async (req, res) => {
     try {
@@ -63,7 +64,17 @@ exports.getPostById = getPostById;
 // POST /postagens
 const createPost = async (req, res) => {
     try {
-        const postData = req.body;
+        if (!req.usuarioId) {
+            return res.status(401).json({ message: 'Usuário não autenticado' });
+        }
+        if (!mongoose_1.Types.ObjectId.isValid(req.usuarioId)) {
+            return res.status(400).json({ message: 'ID de usuário inválido' });
+        }
+        const postData = {
+            titulo: req.body.titulo,
+            conteudo: req.body.conteudo,
+            autor: new mongoose_1.Types.ObjectId(req.usuarioId)
+        };
         const novaPostagem = await postagemRepository.create(postData);
         res.status(201).json(novaPostagem);
     }

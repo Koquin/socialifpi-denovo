@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.remove = exports.update = exports.findByEmail = exports.findByNome = exports.findById = exports.findAll = exports.create = void 0;
+exports.remove = exports.update = exports.findByEmail = exports.findById = exports.findAll = exports.create = void 0;
 const Usuario_1 = require("../models/Usuario");
 const create = async (userData) => {
     const novoUsuario = new Usuario_1.Usuario(userData);
@@ -15,11 +15,6 @@ const findById = async (id) => {
     return await Usuario_1.Usuario.findById(id).select('-senha');
 };
 exports.findById = findById;
-// FUNÇÃO NOVA para login pelo nome (já existente)
-const findByNome = async (nome) => {
-    return await Usuario_1.Usuario.findOne({ nome });
-};
-exports.findByNome = findByNome;
 // FUNÇÃO NOVA para login pelo email
 const findByEmail = async (email) => {
     return await Usuario_1.Usuario.findOne({ email });
