@@ -107,7 +107,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 },
                 body: JSON.stringify({ titulo, conteudo }),
             });
-
+            console.log("Resposta da criação de postagem:", resposta);
             if (!resposta.ok) {
                 throw new Error("Erro ao criar postagem.");
             }

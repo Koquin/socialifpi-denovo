@@ -39,7 +39,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.deleteUser = exports.updateUser = exports.createUser = exports.getUserById = exports.getAllUsers = exports.loginUser = void 0;
 const usuarioRepository = __importStar(require("../repositories/usuarioRepository"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
-const JWT_SECRET = process.env.JWT_SECRET || 'uma_chave_super_secreta_e_segura';
+const JWT_SECRET = 'segredo_super_secreto';
 // POST /usuarios/login
 const loginUser = async (req, res) => {
     console.log('POST /usuarios/login: Tentativa de login.');

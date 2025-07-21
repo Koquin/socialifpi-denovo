@@ -1,9 +1,9 @@
 import { Request, Response } from 'express';
 import * as usuarioRepository from '../repositories/usuarioRepository';
 import { ICreateUsuarioDto, IUpdateUsuarioDto } from '../repositories/usuarioRepository';
-import jwt from 'jsonwebtoken'; 
+import jwt from 'jsonwebtoken';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'uma_chave_super_secreta_e_segura';
+const JWT_SECRET = 'segredo_super_secreto';
 
 // POST /usuarios/login
 export const loginUser = async (req: Request, res: Response) => {
@@ -37,7 +37,7 @@ export const loginUser = async (req: Request, res: Response) => {
         return res.status(200).json({
             autenticado: true,
             token,
-            id: usuario._id,       
+            id: usuario._id,
             nome: usuario.nome,
             email: usuario.email
         });
