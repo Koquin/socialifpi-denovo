@@ -149,7 +149,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 console.log("Usuário não encontrado na resposta.");
             }
 
-            const postagens = dados.postagens;
+            const postagens = dados; // <-- Agora, 'dados' JÁ É o array de postagens
             console.log("Postagens recebidas:", postagens);
 
             const container = document.getElementById("postagens");
