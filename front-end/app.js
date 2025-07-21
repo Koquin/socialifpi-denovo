@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const apiUrl = 'http://localhost:8080';
 
     // ENDPOINTS
-    const endpointCadastro = apiUrl + '/cadastrar';
+    const endpointCadastro = apiUrl + '/usuario/';
     const endpointLogin = apiUrl + '/login';
 
     // LISTAR POSTAGENS
@@ -100,15 +100,19 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // CADASTRAR USUÁRIO NA API
-    async function salvarConta(usuario, senha) {
+    async function salvarConta(nome, senha) {
+        console.log('Tentando cadastrar usuário:', nome);
         try {
+            console.log('Enviando dados para o endpoint:', endpointCadastro);
+            console.log('Dados:', { nome, senha });
             const resposta = await fetch(endpointCadastro, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ usuario, senha })
+                body: JSON.stringify({ nome, senha })
             });
-
+            console.log('Resposta da API:', resposta);
             if (!resposta.ok) {
+                console.log('Erro na resposta da API:', resposta.status);
                 const erro = await resposta.json();
                 alert(erro.mensagem || 'Erro ao criar conta!');
                 return false;
