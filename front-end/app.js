@@ -18,6 +18,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const botaoCadastro = document.getElementById("botaoCadastro");
     const botaoNovaPostagem = document.getElementById("botaoNovaPostagem");
     const botaoLogout = document.getElementById("botaoLogout");
+    let idPostagemParaCompartilhar = null;
 
     // Inicialmente esconder botão logout
     botaoLogout.style.display = "none";
@@ -40,6 +41,17 @@ document.addEventListener("DOMContentLoaded", () => {
     if (token) {
         mostrarAreaPrincipal(token);
     }
+
+    document.getElementById("botaoFiltrar").addEventListener("click", () => {
+        const nome = document.getElementById("filtroUsuario").value.trim();
+        listarPostagens(nome);
+    });
+
+    document.getElementById("botaoLimparFiltro").addEventListener("click", () => {
+        document.getElementById("filtroUsuario").value = "";
+        listarPostagens();
+    });
+
 
     // CADASTRO
     botaoCadastro.addEventListener("click", async () => {
@@ -121,80 +133,78 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
- async function listarPostagens() {
-    console.log(localStorage);
+async function listarPostagens(nomeFiltro = "") {
     try {
-        console.log("Iniciando listagem de postagens...");
-        console.log(localStorage.getItem('token'));
-        console.log(endpointPostagens);
-
         const resposta = await fetch(endpointPostagens, {
             headers: {
                 'Authorization': 'Bearer ' + localStorage.getItem('token')
             }
         });
 
-        console.log(resposta);
         if (!resposta.ok) {
             throw new Error(`HTTP error! status: ${resposta.status}`);
         }
 
         const postagens = await resposta.json();
-        console.log("Postagens recebidas:", postagens);
 
         const container = document.getElementById("postagens");
         container.innerHTML = "";
 
-        postagens.forEach((postagem, index) => {
-            console.log(`Processando postagem #${index + 1}:`, postagem);
+        const nomeFiltroLower = nomeFiltro.toLowerCase();
 
-            const article = document.createElement("article");
+        postagens
+            .filter(postagem => {
+                const nomeAutorCompartilhador = postagem.autor?.nome?.toLowerCase() || "";
+                return nomeAutorCompartilhador.includes(nomeFiltroLower);
+            })
+            .forEach((postagem) => {
+                const article = document.createElement("article");
 
-            const titulo = document.createElement("h3");
-            const conteudo = document.createElement("p");
-            const data = document.createElement("small");
-            const infoAutor = document.createElement("p");
-            const botaoCompartilhar = document.createElement("button");
+                const titulo = document.createElement("h3");
+                const conteudo = document.createElement("p");
+                const data = document.createElement("small");
+                const infoAutor = document.createElement("p");
+                const botaoCompartilhar = document.createElement("button");
 
-            const compartilhada = postagem.compartilhadaDe != null;
+                const compartilhada = postagem.compartilhadaDe != null;
 
-            const nomeAutor = postagem.autor?.nome || "Desconhecido";
-            const nomeOriginal = postagem.compartilhadaDe?.autor?.nome || "Desconhecido";
-            const tituloOriginal = postagem.compartilhadaDe?.titulo || postagem.titulo;
-            const conteudoOriginal = postagem.compartilhadaDe?.conteudo || postagem.conteudo;
+                const nomeAutor = postagem.autor?.nome || "Desconhecido";
+                const nomeOriginal = postagem.compartilhadaDe?.autor?.nome || "Desconhecido";
+                const tituloOriginal = postagem.compartilhadaDe?.titulo || postagem.titulo;
+                const conteudoOriginal = postagem.compartilhadaDe?.conteudo || postagem.conteudo;
 
-            // Título
-            titulo.textContent = compartilhada
-                ? `[Compartilhado] ${tituloOriginal}`
-                : postagem.titulo;
+                titulo.textContent = compartilhada
+                    ? `[Compartilhado] ${tituloOriginal}`
+                    : postagem.titulo;
 
-            // Conteúdo
-            conteudo.textContent = compartilhada ? conteudoOriginal : postagem.conteudo;
+                conteudo.textContent = compartilhada ? conteudoOriginal : postagem.conteudo;
 
-            // Data
-            data.textContent = new Date(postagem.createdAt || postagem.data).toLocaleString();
+                data.textContent = new Date(postagem.createdAt || postagem.data).toLocaleString();
 
-            // Autor ou Compartilhamento
-            if (compartilhada) {
-                infoAutor.textContent = `Compartilhado por: ${nomeAutor} (original de ${nomeOriginal})`;
-            } else {
-                infoAutor.textContent = `Autor: ${nomeAutor}`;
-            }
+                if (compartilhada) {
+                    infoAutor.textContent = `Compartilhado por: ${nomeAutor} (original de ${nomeOriginal})`;
 
-            // Botão de compartilhar
-            botaoCompartilhar.textContent = "Compartilhar";
-            botaoCompartilhar.addEventListener("click", () => compartilharPostagem(postagem._id));
+                    // Resposta do compartilhamento
+                    if (postagem.resposta) {
+                        const resposta = document.createElement("blockquote");
+                        resposta.textContent = postagem.resposta;
+                        article.appendChild(resposta);
+                    }
+                } else {
+                    infoAutor.textContent = `Autor: ${nomeAutor}`;
+                }
 
-            article.append(titulo, conteudo, data, infoAutor, botaoCompartilhar);
-            container.appendChild(article);
-        });
+                botaoCompartilhar.textContent = "Compartilhar";
+                botaoCompartilhar.addEventListener("click", () => abrirModalCompartilhar(postagem._id));
 
-        console.log("Listagem de postagens finalizada.");
+                article.append(titulo, conteudo, data, infoAutor, botaoCompartilhar);
+                container.appendChild(article);
+            });
+
     } catch (erro) {
         console.error("Erro ao listar postagens:", erro);
     }
 }
-
 
     // LOGOUT
     botaoLogout.addEventListener("click", () => {
@@ -222,7 +232,7 @@ document.addEventListener("DOMContentLoaded", () => {
         listarPostagens();
     }
 
-async function compartilharPostagem(idPostagem) {
+async function compartilharPostagem(idPostagem, resposta) {
     const idUsuario = localStorage.getItem("id");
 
     if (!idUsuario) {
@@ -231,27 +241,61 @@ async function compartilharPostagem(idPostagem) {
     }
 
     try {
-        const resposta = await fetch(`${endpointPostagens}/compartilhar/${idPostagem}`, {
+        const respostaServidor = await fetch(`${endpointPostagens}/compartilhar/${idPostagem}`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
                 "Authorization": "Bearer " + localStorage.getItem("token")
             },
-            body: JSON.stringify({ id: idUsuario }) // <-- Aqui o campo é 'id'
+            body: JSON.stringify({ id: idUsuario, resposta })
         });
 
-        if (!resposta.ok) {
-            const erro = await resposta.json();
+        if (!respostaServidor.ok) {
+            const erro = await respostaServidor.json();
             throw new Error(erro.mensagem || "Erro ao compartilhar.");
         }
 
         alert("Postagem compartilhada com sucesso!");
-        listarPostagens(); // Atualiza a lista
+        listarPostagens();
     } catch (erro) {
         console.error("Erro ao compartilhar postagem:", erro);
         alert("Erro ao compartilhar. Tente novamente.");
     }
 }
 
+
+function abrirModalCompartilhar(idPostagem) {
+    idPostagemParaCompartilhar = idPostagem;
+    document.getElementById("inputRespostaCompartilhamento").value = "";
+    document.getElementById("modalCompartilhar").style.display = "flex";
+}
+
+document.getElementById("cancelarCompartilhamento").addEventListener("click", () => {
+    document.getElementById("modalCompartilhar").style.display = "none";
+    idPostagemParaCompartilhar = null;
+});
+
+document.getElementById("confirmarCompartilhamento").addEventListener("click", () => {
+    const resposta = document.getElementById("inputRespostaCompartilhamento").value.trim();
+    if (!idPostagemParaCompartilhar) return;
+
+    compartilharPostagem(idPostagemParaCompartilhar, resposta);
+    document.getElementById("modalCompartilhar").style.display = "none";
+    idPostagemParaCompartilhar = null;
+});
+
+document.querySelectorAll('.emoji-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+        const emoji = e.target.textContent;
+        const textarea = document.getElementById('inputRespostaCompartilhamento');
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        const texto = textarea.value;
+
+        textarea.value = texto.substring(0, start) + emoji + texto.substring(end);
+        textarea.focus();
+        textarea.setSelectionRange(start + emoji.length, start + emoji.length);
+    });
+});
 
 });

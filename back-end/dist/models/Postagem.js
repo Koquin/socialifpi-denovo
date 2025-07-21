@@ -64,6 +64,10 @@ const PostagemSchema = new mongoose_1.Schema({
         ref: 'Postagem',
         default: null,
     },
+    resposta: {
+        type: String,
+        default: ""
+    }
 });
 exports.Postagem = mongoose_1.default.model('Postagem', PostagemSchema);
 //# sourceMappingURL=Postagem.js.map

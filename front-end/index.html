@@ -8,6 +8,26 @@
     <link rel="stylesheet" href="estilos.css" />
 </head>
 
+<!-- Modal de compartilhamento -->
+<div id="modalCompartilhar" class="modal" style="display: none;">
+    <div class="modal-content">
+        <h2>Compartilhar postagem</h2>
+        <textarea id="inputRespostaCompartilhamento" placeholder="Escreva algo sobre esta postagem..."></textarea>
+        <div id="emojiPicker" style="margin-bottom: 10px;">
+            <button class="emoji-btn">😊</button>
+            <button class="emoji-btn">🔥</button>
+            <button class="emoji-btn">🎉</button>
+            <button class="emoji-btn">👏</button>
+            <button class="emoji-btn">💡</button>
+        </div>
+
+        <div class="modal-buttons">
+            <button id="confirmarCompartilhamento">Compartilhar</button>
+            <button id="cancelarCompartilhamento">Cancelar</button>
+        </div>
+    </div>
+</div>
+
 <body>
     <div id="container">
         <header>
@@ -54,6 +74,7 @@
         </section>
 
         <!-- Conteúdo principal (visível após login) -->
+
         <main id="areaPrincipal" style="display: none;">
             <div id="usuarioLogado" style="margin-bottom: 20px; font-weight: bold;"></div>
 
@@ -70,6 +91,14 @@
                 </div>
             </section>
 
+            <!-- Filtro por nome de usuário -->
+            <section id="filtroUsuarioContainer">
+                <input type="text" id="filtroUsuario" placeholder="Filtrar por nome de usuário..." />
+                <button id="botaoFiltrar">Filtrar</button>
+                <button id="botaoLimparFiltro">Limpar</button>
+            </section>
+
+            <!-- Lista de postagens -->
             <section id="postagens"></section>
         </main>
 

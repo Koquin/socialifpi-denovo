@@ -91,10 +91,11 @@ export const deletePost = async (req: Request, res: Response) => {
 };
 
 // POST /compartilhar/:id
+// POST /compartilhar/:id
 export const compartilharPostagem = async (req: Request, res: Response) => {
     try {
         const idPostagem = req.params.id;
-        const idUsuario = req.body.id;
+        const { id: idUsuario, resposta } = req.body;
 
         if (!idUsuario) {
             return res.status(400).json({ mensagem: 'ID do usuário é obrigatório.' });
@@ -112,6 +113,7 @@ export const compartilharPostagem = async (req: Request, res: Response) => {
             conteudo: original.conteudo,
             autor: idUsuario,
             compartilhadaDe: origem,
+            resposta: resposta,
         });
 
         await novaPostagem.save();
@@ -121,4 +123,3 @@ export const compartilharPostagem = async (req: Request, res: Response) => {
         res.status(500).json({ erro: 'Erro ao compartilhar postagem.' });
     }
 };
-

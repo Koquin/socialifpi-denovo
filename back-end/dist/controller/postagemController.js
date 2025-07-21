@@ -113,10 +113,11 @@ const deletePost = async (req, res) => {
 };
 exports.deletePost = deletePost;
 // POST /compartilhar/:id
+// POST /compartilhar/:id
 const compartilharPostagem = async (req, res) => {
     try {
         const idPostagem = req.params.id;
-        const idUsuario = req.body.id;
+        const { id: idUsuario, resposta } = req.body;
         if (!idUsuario) {
             return res.status(400).json({ mensagem: 'ID do usuário é obrigatório.' });
         }
@@ -130,6 +131,7 @@ const compartilharPostagem = async (req, res) => {
             conteudo: original.conteudo,
             autor: idUsuario,
             compartilhadaDe: origem,
+            resposta: resposta,
         });
         await novaPostagem.save();
         res.status(201).json({ mensagem: 'Postagem compartilhada com sucesso!', novaPostagem });
