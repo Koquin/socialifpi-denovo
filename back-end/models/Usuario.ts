@@ -1,15 +1,13 @@
 import mongoose, { Document, Schema } from 'mongoose';
 
-// 1. Defina a interface para o seu documento de usuário
-// Ela deve estender 'Document' para incluir propriedades como '_id'
 export interface IUsuario extends Document {
     nome: string;
     email: string;
-    senha: string; // Lembre-se do aviso de segurança sobre senhas não criptografadas
+    senha: string;
     data_criacao: Date;
 }
 
-const UsuarioSchema = new Schema<IUsuario>({ // 2. Tipagem do Schema com <IUser>
+const UsuarioSchema = new Schema<IUsuario>({
     nome: {
         type: String,
         required: true,
@@ -32,5 +30,4 @@ const UsuarioSchema = new Schema<IUsuario>({ // 2. Tipagem do Schema com <IUser>
     },
 });
 
-// 3. Exporte o modelo usando 'export const' e tipagem com <IUser>
 export const Usuario = mongoose.model<IUsuario>('Usuario', UsuarioSchema);

@@ -10,8 +10,7 @@ export interface ICreatePostagemDto {
 export interface IUpdatePostagemDto extends Partial<ICreatePostagemDto> {
     $push?: { comentarios: IComentario };
     $set?: any;
-    curtidas?: number; // Este 'curtidas' como number pode ser confuso, já que agora é um array
-    // O $push e $pull serão usados para as curtidas, então este campo pode ser removido se não for usado para contagem direta
+    curtidas?: number;
 }
 
 export const create = async (postData: ICreatePostagemDto): Promise<IPostagem> => {
@@ -30,28 +29,26 @@ export const findAll = async (): Promise<IPostagem[]> => {
             }
         })
         .select('-__v')
-        .sort({ createdAt: -1 }); // Usar createdAt do timestamps: true
+        .sort({ createdAt: -1 });
 };
 
 export const findById = async (id: string): Promise<IPostagem | null> => {
     console.log(`[findById] Tentando buscar postagem com ID: ${id}`);
     try {
         const postagem = await Postagem.findById(id)
-            .populate('autor', 'nome email') // Popula o autor da postagem
-            .populate({ // Popula a postagem original em caso de compartilhamento
+            .populate('autor', 'nome email')
+            .populate({
                 path: 'compartilhadaDe',
-                select: 'titulo conteudo createdAt data', // Seleciona campos da postagem original
+                select: 'titulo conteudo createdAt data',
                 populate: {
-                    path: 'autor', // Popula o autor da postagem original
+                    path: 'autor',
                     select: 'nome email'
                 }
             })
-            // .lean() // Opcional: Se você não precisa de métodos Mongoose no resultado, pode adicionar .lean() para objetos JS puros
-            .exec(); // Explicitamente executa a query
+            .exec();
 
         if (postagem) {
             console.log(`[findById] Postagem encontrada. ID: ${id}`);
-            // console.log(`[findById] Postagem populada: ${JSON.stringify(postagem, null, 2)}`); // Descomente para ver o objeto completo populado
         } else {
             console.log(`[findById] Postagem não encontrada para o ID: ${id}`);
         }
@@ -59,8 +56,7 @@ export const findById = async (id: string): Promise<IPostagem | null> => {
 
     } catch (error: any) {
         console.error(`[findById] ERRO ao buscar/popular postagem com ID ${id}:`, error.message);
-        // console.error(`[findById] Stack Trace:`, error.stack); // Para mais detalhes do erro
-        return null; // Retorna null em caso de erro
+        return null;
     }
 };
 
@@ -80,22 +76,18 @@ export const addComentario = async (postId: string, comentario: IComentario): Pr
     );
 };
 
-// --- NOVOS MÉTODOS PARA CURTIDAS ---
-
 export const addLike = async (postId: string, userId: string): Promise<IPostagem | null> => {
-    // Adiciona o userId ao array de curtidas se ele ainda não estiver lá
     return await Postagem.findByIdAndUpdate(
         postId,
-        { $addToSet: { curtidas: new Types.ObjectId(userId) } }, // $addToSet adiciona um elemento apenas se ele não existe
+        { $addToSet: { curtidas: new Types.ObjectId(userId) } },
         { new: true }
     );
 };
 
 export const removeLike = async (postId: string, userId: string): Promise<IPostagem | null> => {
-    // Remove o userId do array de curtidas
     return await Postagem.findByIdAndUpdate(
         postId,
-        { $pull: { curtidas: new Types.ObjectId(userId) } }, // $pull remove um elemento do array
+        { $pull: { curtidas: new Types.ObjectId(userId) } },
         { new: true }
     );
 };

@@ -364,7 +364,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
                     dataElement.textContent = new Date(postagem.createdAt || postagem.data).toLocaleString();
                     autorElement.textContent = compartilhada
-                        ? `Compartilhado de: ${nomeOriginal}`
+                        ? `Compartilhado por: ${nomeOriginal}`
                         : `Autor: ${nomeAutor}`;
                     metaInfoDiv.appendChild(autorElement);
                     metaInfoDiv.appendChild(dataElement);

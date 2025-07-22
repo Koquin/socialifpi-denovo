@@ -18,7 +18,7 @@ export const getAllPosts = async (req: Request, res: Response) => {
                     select: 'nome _id'
                 }
             })
-            .sort({ createdAt: -1 }); // Usar createdAt
+            .sort({ createdAt: -1 });
 
         res.status(200).json(postagens);
     } catch (error) {
@@ -63,7 +63,7 @@ export const createPost = async (req: AuthenticatedRequest, res: Response) => {
     }
 };
 
-// PUT /postagens/:id (Ainda sem autenticação, mas manteremos por enquanto)
+// PUT /postagens/:id
 export const updatePost = async (req: Request, res: Response) => {
     try {
         const postData: IUpdatePostagemDto = req.body;
@@ -120,11 +120,11 @@ export const deletePost = async (req: Request, res: Response) => {
     }
 };
 
-// POST /compartilhar/:id (Ainda sem autenticação, mas manteremos por enquanto)
+// POST /compartilhar/:id 
 export const compartilharPostagem = async (req: Request, res: Response) => {
     try {
         const idPostagem = req.params.id;
-        const { id: idUsuario, resposta } = req.body; // id: idUsuario significa renomear 'id' do body para 'idUsuario'
+        const { id: idUsuario, resposta } = req.body;
 
         if (!idUsuario) {
             return res.status(400).json({ mensagem: 'ID do usuário é obrigatório.' });
@@ -135,12 +135,12 @@ export const compartilharPostagem = async (req: Request, res: Response) => {
             return res.status(404).json({ mensagem: 'Postagem original não encontrada.' });
         }
 
-        const origem = original.compartilhadaDe || original._id; // Se já for compartilhada, mantém a origem original
+        const origem = original.compartilhadaDe || original._id;
 
         const novaPostagem = new Postagem({
             titulo: original.titulo,
             conteudo: original.conteudo,
-            autor: new Types.ObjectId(idUsuario), // Converter para ObjectId
+            autor: new Types.ObjectId(idUsuario),
             compartilhadaDe: origem,
             resposta: resposta,
         });
@@ -158,12 +158,12 @@ export const compartilharPostagem = async (req: Request, res: Response) => {
 export const addCommentToPost = async (req: AuthenticatedRequest, res: Response) => {
     try {
         const postId = req.params.id as string;
-        const { body, autor } = req.body; // 'autor' é o nome do autor do comentário, não o ID
+        const { body, autor } = req.body;
 
         if (!body) {
             return res.status(400).json({ message: 'O conteúdo do comentário é obrigatório.' });
         }
-        if (!autor) { // O autor deve ser enviado do frontend
+        if (!autor) {
             return res.status(400).json({ message: 'O nome do autor do comentário é obrigatório.' });
         }
 
@@ -191,7 +191,7 @@ export const toggleLike = async (req: AuthenticatedRequest, res: Response) => {
     console.log('--- Início da requisição toggleLike ---');
     try {
         const postId = req.params.id as string;
-        const userId = req.usuarioId; // Obtido do token autenticado
+        const userId = req.usuarioId;
 
         console.log(`Recebida requisição para curtir/descurtir. Post ID: ${postId}, User ID do Token: ${userId}`);
 
@@ -200,7 +200,6 @@ export const toggleLike = async (req: AuthenticatedRequest, res: Response) => {
             return res.status(401).json({ message: 'Usuário não autenticado.' });
         }
 
-        // Validação básica do postId
         if (!Types.ObjectId.isValid(postId)) {
             console.log(`Erro: ID de postagem inválido fornecido: ${postId}`);
             return res.status(400).json({ message: 'ID da postagem inválido.' });
@@ -215,7 +214,6 @@ export const toggleLike = async (req: AuthenticatedRequest, res: Response) => {
         }
 
         const userObjectId = new Types.ObjectId(userId);
-        // Verifica se o ID do usuário já existe no array de curtidas
         const hasLiked = postagem.curtidas.some(likeId => {
             console.log(`Comparando curtida ${likeId.toString()} com User ID ${userObjectId.toString()}`);
             return likeId.equals(userObjectId);
@@ -235,7 +233,6 @@ export const toggleLike = async (req: AuthenticatedRequest, res: Response) => {
         }
 
         console.log(`Resultado da operação no repositório. Postagem atualizada: ${updatedPost ? 'Sim' : 'Não'}`);
-        // console.log(`Dados da postagem atualizada: ${JSON.stringify(updatedPost, null, 2)}`); // Descomente para ver o objeto completo
 
         if (!updatedPost) {
             console.error('Erro ao atualizar curtida: Repositório não retornou a postagem atualizada.');
@@ -246,9 +243,9 @@ export const toggleLike = async (req: AuthenticatedRequest, res: Response) => {
 
         res.status(200).json({
             message: `Postagem ${action}.`,
-            postagem: updatedPost, // Retorna o objeto da postagem atualizada
-            action: action, // Retorna a ação realizada
-            likesCount: updatedPost.curtidas.length // Retorna a contagem atualizada de curtidas
+            postagem: updatedPost,
+            action: action,
+            likesCount: updatedPost.curtidas.length
         });
 
     } catch (error) {

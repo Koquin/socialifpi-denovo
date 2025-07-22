@@ -5,19 +5,19 @@ export interface IPostagem extends Document {
   titulo: string;
   conteudo: string;
   autor: Types.ObjectId;
-  data: Date; // A data original de criação (pode ser redundante com createdAt)
+  data: Date;
   comentarios: IComentario[];
-  curtidas: Types.ObjectId[]; // <-- AGORA É UM ARRAY DE IDS DE USUÁRIOS
+  curtidas: Types.ObjectId[];
   compartilhadaDe?: mongoose.Types.ObjectId | null;
   resposta?: string;
-  createdAt: Date; // Adicionado automaticamente por timestamps
-  updatedAt: Date; // Adicionado automaticamente por timestamps
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export interface IComentario {
   body: string;
   date: Date;
-  autor?: string; // Nome do autor do comentário (string)
+  autor?: string;
 }
 
 const PostagemSchema = new Schema({
@@ -32,18 +32,18 @@ const PostagemSchema = new Schema({
   },
   autor: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Usuario', // Referencia o modelo de Usuário
+    ref: 'Usuario',
     required: true,
   },
-  data: { // Campo 'data' original, mantido por compatibilidade
+  data: {
     type: Date,
     required: true,
     default: Date.now,
   },
-  curtidas: [ // <-- DEFINIÇÃO DO CAMPO 'CURTIDAS' COMO ARRAY DE REFERÊNCIAS
+  curtidas: [
     {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'Usuario' // Cada elemento no array é o ObjectId de um usuário
+      ref: 'Usuario'
     }
   ],
   comentarios: [
@@ -61,7 +61,7 @@ const PostagemSchema = new Schema({
   ],
   compartilhadaDe: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Postagem', // Referencia outra Postagem
+    ref: 'Postagem',
     default: null,
   },
   resposta: {
@@ -69,7 +69,7 @@ const PostagemSchema = new Schema({
     default: ""
   }
 }, {
-  timestamps: true // Habilita createdAt e updatedAt
+  timestamps: true
 });
 
 export const Postagem = mongoose.model<IPostagem>('Postagem', PostagemSchema);

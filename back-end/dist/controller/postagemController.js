@@ -1,22 +1,22 @@
 "use strict";
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function (o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     var desc = Object.getOwnPropertyDescriptor(m, k);
     if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
+        desc = { enumerable: true, get: function () { return m[k]; } };
     }
     Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
+}) : (function (o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     o[k2] = m[k];
 }));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function (o, v) {
     Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
+}) : function (o, v) {
     o["default"] = v;
 });
 var __importStar = (this && this.__importStar) || (function () {
-    var ownKeys = function(o) {
+    var ownKeys = function (o) {
         ownKeys = Object.getOwnPropertyNames || function (o) {
             var ar = [];
             for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
@@ -43,12 +43,12 @@ const getAllPosts = async (req, res) => {
         const postagens = await Postagem_1.Postagem.find()
             .populate('autor', 'nome _id')
             .populate({
-            path: 'compartilhadaDe',
-            populate: {
-                path: 'autor',
-                select: 'nome _id'
-            }
-        })
+                path: 'compartilhadaDe',
+                populate: {
+                    path: 'autor',
+                    select: 'nome _id'
+                }
+            })
             .sort({ createdAt: -1 }); // Usar createdAt
         res.status(200).json(postagens);
     }
@@ -93,7 +93,7 @@ const createPost = async (req, res) => {
     }
 };
 exports.createPost = createPost;
-// PUT /postagens/:id (Ainda sem autenticação, mas manteremos por enquanto)
+// PUT /postagens/:id 
 const updatePost = async (req, res) => {
     try {
         const postData = req.body;
@@ -145,7 +145,7 @@ const deletePost = async (req, res) => {
     }
 };
 exports.deletePost = deletePost;
-// POST /compartilhar/:id (Ainda sem autenticação, mas manteremos por enquanto)
+// POST /compartilhar/:id 
 const compartilharPostagem = async (req, res) => {
     try {
         const idPostagem = req.params.id;
