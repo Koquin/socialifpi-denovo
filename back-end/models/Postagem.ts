@@ -1,26 +1,23 @@
-import mongoose, { Document, Schema, Types} from 'mongoose';
-//models/Post.js
+import mongoose, { Document, Schema, Types } from 'mongoose';
 
 export interface IPostagem extends Document {
   _id: Types.ObjectId;
   titulo: string;
   conteudo: string;
   autor: Types.ObjectId;
-  data: Date;
+  data: Date; // A data original de criação (pode ser redundante com createdAt)
   comentarios: IComentario[];
-  curtidas: number;
+  curtidas: Types.ObjectId[]; // <-- AGORA É UM ARRAY DE IDS DE USUÁRIOS
   compartilhadaDe?: mongoose.Types.ObjectId | null;
-  resposta?: string; 
-  createdAt: Date; // Adicionado para compatibilidade com timestamps
-  updatedAt: Date;
+  resposta?: string;
+  createdAt: Date; // Adicionado automaticamente por timestamps
+  updatedAt: Date; // Adicionado automaticamente por timestamps
 }
-
-
 
 export interface IComentario {
   body: string;
   date: Date;
-  autor?: string; 
+  autor?: string; // Nome do autor do comentário (string)
 }
 
 const PostagemSchema = new Schema({
@@ -35,43 +32,44 @@ const PostagemSchema = new Schema({
   },
   autor: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Usuario',
+    ref: 'Usuario', // Referencia o modelo de Usuário
     required: true,
   },
-  data: {
+  data: { // Campo 'data' original, mantido por compatibilidade
     type: Date,
     required: true,
     default: Date.now,
   },
-  curtidas: {
-    type: Number,
-    default: 0,
-    required: true,
-  },
+  curtidas: [ // <-- DEFINIÇÃO DO CAMPO 'CURTIDAS' COMO ARRAY DE REFERÊNCIAS
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Usuario' // Cada elemento no array é o ObjectId de um usuário
+    }
+  ],
   comentarios: [
-   {
-      body: { type: String, required: true }, // Garante que o body é obrigatório
+    {
+      body: { type: String, required: true },
       date: {
         type: Date,
         default: Date.now,
       },
-      autor: { 
-        type: String, // O autor do comentário será uma string (nome do usuário)
-        required: false, // Opcional, caso o usuário não preencha o campo
+      autor: {
+        type: String,
+        required: false,
       },
     },
   ],
   compartilhadaDe: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Postagem',
+    ref: 'Postagem', // Referencia outra Postagem
     default: null,
   },
-  resposta: { 
+  resposta: {
     type: String,
     default: ""
   }
-},{
-  timestamps: true
+}, {
+  timestamps: true // Habilita createdAt e updatedAt
 });
 
 export const Postagem = mongoose.model<IPostagem>('Postagem', PostagemSchema);

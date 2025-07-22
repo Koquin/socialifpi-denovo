@@ -47,7 +47,7 @@ const PostagemSchema = new mongoose_1.Schema({
     },
     autor: {
         type: mongoose_1.default.Schema.Types.ObjectId,
-        ref: 'Usuario',
+        ref: 'Usuario', // Referencia o modelo de Usuário
         required: true,
     },
     data: {
@@ -55,27 +55,28 @@ const PostagemSchema = new mongoose_1.Schema({
         required: true,
         default: Date.now,
     },
-    curtidas: {
-        type: Number,
-        default: 0,
-        required: true,
-    },
+    curtidas: [
+        {
+            type: mongoose_1.default.Schema.Types.ObjectId,
+            ref: 'Usuario' // Cada elemento no array é o ObjectId de um usuário
+        }
+    ],
     comentarios: [
         {
-            body: { type: String, required: true }, // Garante que o body é obrigatório
+            body: { type: String, required: true },
             date: {
                 type: Date,
                 default: Date.now,
             },
             autor: {
-                type: String, // O autor do comentário será uma string (nome do usuário)
-                required: false, // Opcional, caso o usuário não preencha o campo
+                type: String,
+                required: false,
             },
         },
     ],
     compartilhadaDe: {
         type: mongoose_1.default.Schema.Types.ObjectId,
-        ref: 'Postagem',
+        ref: 'Postagem', // Referencia outra Postagem
         default: null,
     },
     resposta: {
@@ -83,7 +84,7 @@ const PostagemSchema = new mongoose_1.Schema({
         default: ""
     }
 }, {
-    timestamps: true
+    timestamps: true // Habilita createdAt e updatedAt
 });
 exports.Postagem = mongoose_1.default.model('Postagem', PostagemSchema);
 //# sourceMappingURL=Postagem.js.map

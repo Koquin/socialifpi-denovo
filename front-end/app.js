@@ -91,15 +91,16 @@ document.addEventListener("DOMContentLoaded", () => {
             });
 
             if (!resposta.ok) {
-                throw new Error("Erro ao cadastrar usuário.");
+                const erroData = await resposta.json(); // Tenta ler mensagem de erro do servidor
+                throw new Error(erroData.mensagem || "Erro ao cadastrar usuário.");
             }
 
             alert("Cadastro realizado com sucesso! Faça login.");
             cadastroForm.style.display = "none";
             loginForm.style.display = "block";
         } catch (erro) {
-            console.error(erro);
-            alert("Erro ao cadastrar usuário.");
+            console.error("Erro no cadastro:", erro);
+            alert(`Erro ao cadastrar usuário: ${erro.message}`);
         }
     });
 
@@ -123,11 +124,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 mostrarAreaPrincipal(dados.token);
             } else {
-                alert("Credenciais inválidas.");
+                alert(dados.mensagem || "Credenciais inválidas."); // Usa mensagem do backend
             }
         } catch (erro) {
-            console.error(erro);
-            alert("Erro ao realizar login.");
+            console.error("Erro ao realizar login:", erro);
+            alert(`Erro ao realizar login: ${erro.message}`);
         }
     });
 
@@ -157,7 +158,8 @@ document.addEventListener("DOMContentLoaded", () => {
             });
             console.log("Resposta da criação de postagem:", resposta);
             if (!resposta.ok) {
-                throw new Error("Erro ao criar postagem.");
+                const erroData = await resposta.json();
+                throw new Error(erroData.mensagem || "Erro ao criar postagem.");
             }
 
             alert("Postagem criada com sucesso!");
@@ -192,20 +194,23 @@ document.addEventListener("DOMContentLoaded", () => {
             const postagens = await resposta.json();
 
             const container = document.getElementById("postagens");
-            container.innerHTML = "";
+            container.innerHTML = ""; // Limpa todo o conteúdo, incluindo o h2 (se presente, mas o HTML já tem o h2)
 
             const nomeFiltroLower = nomeFiltro.toLowerCase();
             const usuarioLogadoId = localStorage.getItem('id');
 
             postagens
                 .filter(postagem => {
-                    const nomeAutorCompartilhador = postagem.autor?.nome?.toLowerCase() || "";
-                    return nomeAutorCompartilhador.includes(nomeFiltroLower);
+                    // Ajustado para filtrar por autor da postagem OU autor da postagem compartilhada
+                    const nomeAutor = postagem.autor?.nome?.toLowerCase() || "";
+                    const nomeOriginalCompartilhada = postagem.compartilhadaDe?.autor?.nome?.toLowerCase() || "";
+                    return nomeAutor.includes(nomeFiltroLower) || nomeOriginalCompartilhada.includes(nomeFiltroLower);
                 })
                 .forEach((postagem) => {
                     const article = document.createElement("article");
                     article.className = 'post-item';
                     article.dataset.postId = postagem._id;
+                    // Mantendo estilos inline para não mudar o CSS existente
                     article.style.cssText = `
                         background-color: #ffffff;
                         border-radius: 8px;
@@ -218,20 +223,27 @@ document.addEventListener("DOMContentLoaded", () => {
                     const conteudo = document.createElement("p");
                     const data = document.createElement("small");
                     const infoAutor = document.createElement("p");
-                    const originalPostDiv = document.createElement("div");
+                    const originalPostDiv = document.createElement("div"); // Para a citação do post original
 
                     const compartilhada = postagem.compartilhadaDe != null;
 
                     const nomeAutor = postagem.autor?.nome || "Desconhecido";
-                    const nomeOriginal = postagem.compartilhadaDe?.autor?.nome || "Desconhecido";
+                    const nomeOriginal = postagem.compartilhadaDe?.autor?.nome || "Desconhecido"; // Autor da postagem original
                     const tituloOriginal = postagem.compartilhadaDe?.titulo || "";
                     const conteudoOriginal = postagem.compartilhadaDe?.conteudo || "";
 
-                    if (compartilhada) {
-                        titulo.textContent = `[Compartilhado]`;
-                        conteudo.textContent = postagem.resposta || '';
-                        infoAutor.textContent = `Compartilhado por: ${nomeAutor}`;
+                    // Lógica para o título e conteúdo da postagem (compartilhada ou original)
+                    titulo.textContent = compartilhada
+                        ? `[Compartilhado] ${tituloOriginal}`
+                        : postagem.titulo;
+                    conteudo.textContent = compartilhada ? postagem.resposta || '' : postagem.conteudo;
 
+
+                    data.textContent = new Date(postagem.createdAt || postagem.data).toLocaleString();
+                    infoAutor.textContent = `Autor: ${nomeAutor}`;
+
+                    // Adiciona a citação da postagem original se for compartilhada
+                    if (compartilhada && postagem.compartilhadaDe) {
                         originalPostDiv.className = 'original-post-quote';
                         originalPostDiv.style.cssText = `
                             border-left: 3px solid #ddd;
@@ -246,27 +258,43 @@ document.addEventListener("DOMContentLoaded", () => {
                             <p>${conteudoOriginal}</p>
                         `;
                         article.appendChild(originalPostDiv);
-                    } else {
-                        titulo.textContent = postagem.titulo;
-                        conteudo.textContent = postagem.conteudo;
-                        infoAutor.textContent = `Autor: ${nomeAutor}`;
                     }
-
-                    data.textContent = new Date(postagem.createdAt || postagem.data).toLocaleString();
 
                     article.append(titulo, conteudo, data, infoAutor);
 
-                    // --- SEÇÃO DE BOTÕES (COMENTÁRIOS, COMPARTILHAR, EXCLUIR) ---
+                    // --- SEÇÃO DE BOTÕES (CURTIR, COMENTÁRIOS, COMPARTILHAR, EXCLUIR) ---
                     const buttonContainer = document.createElement('div');
                     buttonContainer.style.cssText = `
                         display: flex;
                         gap: 10px; /* Espaçamento entre os botões */
                         margin-top: 15px;
+                        flex-wrap: wrap; /* Para garantir que os botões quebrem linha se não houver espaço */
+                        justify-content: flex-start; /* Alinhar à esquerda por padrão */
                     `;
+
+                    // Botão Curtir
+                    const botaoCurtir = document.createElement("button");
+                    // Verifica se o ID do usuário logado está no array de curtidas da postagem
+                    const hasLiked = postagem.curtidas && postagem.curtidas.includes(usuarioLogadoId);
+                    botaoCurtir.textContent = `Curtir (${postagem.curtidas ? postagem.curtidas.length : 0})`;
+                    botaoCurtir.dataset.postId = postagem._id;
+                    botaoCurtir.addEventListener("click", toggleLike);
+                    botaoCurtir.style.cssText = `
+                        background-color: ${hasLiked ? '#6f42c1' : '#fd7e14'}; /* Roxo se curtiu, Laranja se não */
+                        color: white;
+                        padding: 8px 12px;
+                        border: none;
+                        border-radius: 5px;
+                        cursor: pointer;
+                        transition: background-color 0.2s;
+                    `;
+                    botaoCurtir.onmouseover = function () { this.style.backgroundColor = hasLiked ? '#5b37a3' : '#e66400'; };
+                    botaoCurtir.onmouseout = function () { this.style.backgroundColor = hasLiked ? '#6f42c1' : '#fd7e14'; };
+                    buttonContainer.appendChild(botaoCurtir);
+
 
                     const botaoComentarios = document.createElement('button');
                     botaoComentarios.textContent = 'Comentários';
-                    botaoComentarios.className = 'view-post-detail';
                     botaoComentarios.dataset.postId = postagem._id;
                     botaoComentarios.addEventListener('click', toggleCommentsSection);
                     botaoComentarios.style.cssText = `
@@ -278,8 +306,9 @@ document.addEventListener("DOMContentLoaded", () => {
                         cursor: pointer;
                         transition: background-color 0.2s;
                     `;
-                    botaoComentarios.onmouseover = function() { this.style.backgroundColor = '#0056b3'; };
-                    botaoComentarios.onmouseout = function() { this.style.backgroundColor = '#007bff'; };
+                    botaoComentarios.onmouseover = function () { this.style.backgroundColor = '#0056b3'; };
+                    botaoComentarios.onmouseout = function () { this.style.backgroundColor = '#007bff'; };
+                    buttonContainer.appendChild(botaoComentarios);
 
 
                     const botaoCompartilhar = document.createElement("button");
@@ -294,10 +323,10 @@ document.addEventListener("DOMContentLoaded", () => {
                         cursor: pointer;
                         transition: background-color 0.2s;
                     `;
-                    botaoCompartilhar.onmouseover = function() { this.style.backgroundColor = '#218838'; };
-                    botaoCompartilhar.onmouseout = function() { this.style.backgroundColor = '#28a745'; };
+                    botaoCompartilhar.onmouseover = function () { this.style.backgroundColor = '#218838'; };
+                    botaoCompartilhar.onmouseout = function () { this.style.backgroundColor = '#28a745'; };
+                    buttonContainer.appendChild(botaoCompartilhar);
 
-                    buttonContainer.append(botaoComentarios, botaoCompartilhar);
 
                     // Botão de Excluir (visível apenas para o autor)
                     if (postagem.autor && postagem.autor._id === usuarioLogadoId) {
@@ -316,8 +345,8 @@ document.addEventListener("DOMContentLoaded", () => {
                             cursor: pointer;
                             transition: background-color 0.2s;
                         `;
-                        botaoExcluir.onmouseover = function() { this.style.backgroundColor = '#c82333'; };
-                        botaoExcluir.onmouseout = function() { this.style.backgroundColor = '#dc3545'; };
+                        botaoExcluir.onmouseover = function () { this.style.backgroundColor = '#c82333'; };
+                        botaoExcluir.onmouseout = function () { this.style.backgroundColor = '#dc3545'; };
                         buttonContainer.appendChild(botaoExcluir);
                     }
 
@@ -388,7 +417,8 @@ document.addEventListener("DOMContentLoaded", () => {
         // Exibe o e-mail do usuário logado, decodificando token JWT
         try {
             const payload = JSON.parse(atob(token.split(".")[1]));
-            usuarioLogado.textContent = `Olá, ${payload.email}!`;
+            // Use o nome do usuário armazenado no localStorage, se não tiver, use o email
+            usuarioLogado.textContent = `Olá, ${localStorage.getItem('username') || payload.email}!`;
         } catch {
             usuarioLogado.textContent = "Olá, usuário!";
         }
@@ -420,6 +450,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
             if (!respostaServidor.ok) {
                 const erro = await respostaServidor.json();
+                if (respostaServidor.status === 401 || respostaServidor.status === 403) {
+                    alert('Sessão expirada ou inválida. Por favor, faça login novamente.');
+                    performLogout();
+                    return;
+                }
                 throw new Error(erro.mensagem || "Erro ao compartilhar.");
             }
 
@@ -507,14 +542,13 @@ document.addEventListener("DOMContentLoaded", () => {
                 throw new Error(`Erro ao carregar comentários: ${response.statusText}`);
             }
             const postData = await response.json();
-            let comments = postData.comentarios || postData.comments || [];
+            let comments = postData.comentarios || postData.comments || []; // Ajuste para `comentarios`
 
-            // Ordenar comentários por data decrescente 
-            // Para ordenar decrescente (mais recente primeiro)
+            // Ordenar comentários por data decrescente
             comments.sort((a, b) => {
                 const dateA = new Date(a.date);
                 const dateB = new Date(b.date);
-                return dateB.getTime() - dateA.getTime(); // Mais recente primeiro
+                return dateB.getTime() - dateA.getTime();
             });
 
             commentsListDiv.innerHTML = '';
@@ -553,7 +587,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const commentContentInput = document.getElementById(`commentContent-${postId}`);
 
         const content = commentContentInput ? commentContentInput.value.trim() : '';
-        const author = localStorage.getItem('username');
+        const author = localStorage.getItem('username'); // Pega o nome de usuário do localStorage
 
         if (!content) {
             alert('O comentário não pode estar vazio.');
@@ -567,9 +601,9 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
         if (!author) {
-             alert('Seu nome de usuário não foi encontrado. Por favor, faça login novamente.');
-             performLogout();
-             return;
+            alert('Seu nome de usuário não foi encontrado. Por favor, faça login novamente.');
+            performLogout();
+            return;
         }
 
 
@@ -582,15 +616,15 @@ document.addEventListener("DOMContentLoaded", () => {
                 },
                 body: JSON.stringify({
                     body: content,
-                    autor: author,
-                    date: new Date().toISOString() // Garante que a data é salva em formato ISO string
+                    autor: author, // Envia o nome do autor do comentário
+                    date: new Date().toISOString()
                 }),
             });
 
             if (response.ok) {
                 alert('Comentário adicionado com sucesso!');
                 if (commentContentInput) commentContentInput.value = '';
-                await loadCommentsForPost(postId); // Recarrega os comentários para mostrar a nova ordem
+                await loadCommentsForPost(postId); // Recarrega os comentários
             } else {
                 const errorData = await response.json();
                 if (response.status === 401 || response.status === 403) {
@@ -659,5 +693,64 @@ document.addEventListener("DOMContentLoaded", () => {
             alert('Ocorreu um erro ao tentar excluir a postagem.');
         }
     }
-});
 
+    // --- NOVA FUNÇÃO: TOGGLE DE CURTIDA ---
+    async function toggleLike(event) {
+        const button = event.target;
+        const postId = button.dataset.postId;
+        const userId = localStorage.getItem('id'); // ID do usuário logado
+        console.log(`ID do usuário logado: ${userId}, Post ID: ${postId}`);
+        if (!userId) {
+            alert("Você precisa estar logado para curtir postagens.");
+            performLogout();
+            return;
+        }
+
+        const token = localStorage.getItem('token');
+        console.log(`Token do usuário: ${token}`);
+        if (!token) {
+            alert('Sessão inválida. Faça login novamente.');
+            performLogout();
+            return;
+        }
+
+        try {
+            console.log(`Tentando curtir/descurtir a postagem com ID: ${postId} pelo usuário: ${userId}`);
+            const response = await fetch(`${endpointPostagens}/${postId}/curtir`, {
+                method: 'POST', // Usamos POST para alternar (toggle) no backend
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ userId: userId }) // O backend espera o userId no body
+            });
+            console.log(`Resposta do servidor: ${JSON.stringify(response)}`);
+            if (response.ok) {
+                const data = await response.json();
+                // Atualiza o texto do botão para refletir o novo estado e contagem
+                button.textContent = `Curtir (${data.likesCount})`; // Apenas "Curtir" e a contagem
+                // Atualiza a cor de fundo do botão baseada no estado 'liked'
+                if (data.action === 'liked') {
+                    button.style.backgroundColor = '#6f42c1'; // Roxo
+                    button.onmouseover = function () { this.style.backgroundColor = '#5b37a3'; };
+                    button.onmouseout = function () { this.style.backgroundColor = '#6f42c1'; };
+                } else {
+                    button.style.backgroundColor = '#fd7e14'; // Laranja
+                    button.onmouseover = function () { this.style.backgroundColor = '#e66400'; };
+                    button.onmouseout = function () { this.style.backgroundColor = '#fd7e14'; };
+                }
+            } else {
+                const errorData = await response.json();
+                if (response.status === 401 || response.status === 403) {
+                    alert('Sessão expirada ou inválida. Por favor, faça login novamente.');
+                    performLogout();
+                } else {
+                    alert(`Erro ao curtir/descurtir: ${errorData.message || response.statusText}`);
+                }
+            }
+        } catch (error) {
+            console.error('Erro na requisição de curtir:', error);
+            alert('Ocorreu um erro ao tentar curtir/descurtir a postagem.');
+        }
+    }
+});

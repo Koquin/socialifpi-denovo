@@ -1,5 +1,4 @@
 "use strict";
-//socialifpi-denovo/back-end/routes/postagemRoutes.ts
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     var desc = Object.getOwnPropertyDescriptor(m, k);
@@ -41,9 +40,10 @@ const router = (0, express_1.Router)();
 router.get('/', postagemController.getAllPosts);
 router.get('/:id', postagemController.getPostById);
 router.post('/', authMiddleware_1.autenticarToken, postagemController.createPost);
-router.put('/:id', postagemController.updatePost);
+router.put('/:id', postagemController.updatePost); // Considerar proteger esta rota
 router.delete('/:id', authMiddleware_1.autenticarToken, postagemController.deletePost);
-router.post('/compartilhar/:id', postagemController.compartilharPostagem);
+router.post('/compartilhar/:id', postagemController.compartilharPostagem); // Considerar proteger esta rota
 router.post('/:id/comentarios', authMiddleware_1.autenticarToken, postagemController.addCommentToPost);
+router.post('/:id/curtir', authMiddleware_1.autenticarToken, postagemController.toggleLike); // <-- NOVA ROTA PARA CURTIDAS
 exports.default = router;
 //# sourceMappingURL=postagemRoutes.js.map

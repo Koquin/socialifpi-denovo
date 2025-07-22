@@ -1,5 +1,4 @@
 "use strict";
-// socialifpi-denovo/back-end/controllers/postagemController.ts
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     var desc = Object.getOwnPropertyDescriptor(m, k);
@@ -34,7 +33,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.addCommentToPost = exports.compartilharPostagem = exports.deletePost = exports.updatePost = exports.createPost = exports.getPostById = exports.getAllPosts = void 0;
+exports.toggleLike = exports.addCommentToPost = exports.compartilharPostagem = exports.deletePost = exports.updatePost = exports.createPost = exports.getPostById = exports.getAllPosts = void 0;
 const postagemRepository = __importStar(require("../repositories/postagemRepository"));
 const mongoose_1 = require("mongoose");
 const Postagem_1 = require("../models/Postagem");
@@ -42,15 +41,15 @@ const Postagem_1 = require("../models/Postagem");
 const getAllPosts = async (req, res) => {
     try {
         const postagens = await Postagem_1.Postagem.find()
-            .populate('autor', 'nome _id') // Incluindo '_id' do autor
+            .populate('autor', 'nome _id')
             .populate({
             path: 'compartilhadaDe',
             populate: {
                 path: 'autor',
-                select: 'nome _id' // Incluindo '_id' do autor da postagem compartilhada
+                select: 'nome _id'
             }
         })
-            .sort({ data: -1 });
+            .sort({ createdAt: -1 }); // Usar createdAt
         res.status(200).json(postagens);
     }
     catch (error) {
@@ -94,7 +93,7 @@ const createPost = async (req, res) => {
     }
 };
 exports.createPost = createPost;
-// PUT /postagens/:id
+// PUT /postagens/:id (Ainda sem autenticação, mas manteremos por enquanto)
 const updatePost = async (req, res) => {
     try {
         const postData = req.body;
@@ -146,11 +145,11 @@ const deletePost = async (req, res) => {
     }
 };
 exports.deletePost = deletePost;
-// POST /compartilhar/:id
+// POST /compartilhar/:id (Ainda sem autenticação, mas manteremos por enquanto)
 const compartilharPostagem = async (req, res) => {
     try {
         const idPostagem = req.params.id;
-        const { id: idUsuario, resposta } = req.body;
+        const { id: idUsuario, resposta } = req.body; // id: idUsuario significa renomear 'id' do body para 'idUsuario'
         if (!idUsuario) {
             return res.status(400).json({ mensagem: 'ID do usuário é obrigatório.' });
         }
@@ -158,11 +157,11 @@ const compartilharPostagem = async (req, res) => {
         if (!original) {
             return res.status(404).json({ mensagem: 'Postagem original não encontrada.' });
         }
-        const origem = original.compartilhadaDe || original._id;
+        const origem = original.compartilhadaDe || original._id; // Se já for compartilhada, mantém a origem original
         const novaPostagem = new Postagem_1.Postagem({
             titulo: original.titulo,
             conteudo: original.conteudo,
-            autor: idUsuario,
+            autor: new mongoose_1.Types.ObjectId(idUsuario), // Converter para ObjectId
             compartilhadaDe: origem,
             resposta: resposta,
         });
@@ -170,29 +169,31 @@ const compartilharPostagem = async (req, res) => {
         res.status(201).json({ mensagem: 'Postagem compartilhada com sucesso!', novaPostagem });
     }
     catch (erro) {
+        console.error('Erro ao compartilhar postagem:', erro);
         res.status(500).json({ erro: 'Erro ao compartilhar postagem.' });
     }
 };
 exports.compartilharPostagem = compartilharPostagem;
-//função pra adicionar comentario
+// POST /postagens/:id/comentarios
 const addCommentToPost = async (req, res) => {
     try {
         const postId = req.params.id;
-        const { body, autor } = req.body;
+        const { body, autor } = req.body; // 'autor' é o nome do autor do comentário, não o ID
         if (!body) {
             return res.status(400).json({ message: 'O conteúdo do comentário é obrigatório.' });
         }
+        if (!autor) { // O autor deve ser enviado do frontend
+            return res.status(400).json({ message: 'O nome do autor do comentário é obrigatório.' });
+        }
         const novoComentario = {
             body: body,
-            date: new Date(), // A data do comentário será a data atual
-            autor: autor, // Usa o nome do autor fornecido ou 'Anônimo' se não for fornecido
+            date: new Date(),
+            autor: autor,
         };
-        // Chama o método do repositório para adicionar o comentário
         const postagemAtualizada = await postagemRepository.addComentario(postId, novoComentario);
         if (!postagemAtualizada) {
             return res.status(404).json({ message: 'Postagem não encontrada para adicionar comentário.' });
         }
-        // Retorna a postagem atualizada com o novo comentário
         res.status(201).json(postagemAtualizada);
     }
     catch (error) {
@@ -201,4 +202,68 @@ const addCommentToPost = async (req, res) => {
     }
 };
 exports.addCommentToPost = addCommentToPost;
+// --- CONTROLLERS PARA CURTIDAS ---
+const toggleLike = async (req, res) => {
+    console.log('--- Início da requisição toggleLike ---');
+    try {
+        const postId = req.params.id;
+        const userId = req.usuarioId; // Obtido do token autenticado
+        console.log(`Recebida requisição para curtir/descurtir. Post ID: ${postId}, User ID do Token: ${userId}`);
+        if (!userId) {
+            console.log('Erro: Usuário não autenticado (userId ausente do req.usuarioId).');
+            return res.status(401).json({ message: 'Usuário não autenticado.' });
+        }
+        // Validação básica do postId
+        if (!mongoose_1.Types.ObjectId.isValid(postId)) {
+            console.log(`Erro: ID de postagem inválido fornecido: ${postId}`);
+            return res.status(400).json({ message: 'ID da postagem inválido.' });
+        }
+        console.log(`Buscando postagem com ID: ${postId}`);
+        const postagem = await postagemRepository.findById(postId);
+        if (!postagem) {
+            console.log(`Erro: Postagem não encontrada para o ID: ${postId}`);
+            return res.status(404).json({ message: 'Postagem não encontrada.' });
+        }
+        const userObjectId = new mongoose_1.Types.ObjectId(userId);
+        // Verifica se o ID do usuário já existe no array de curtidas
+        const hasLiked = postagem.curtidas.some(likeId => {
+            console.log(`Comparando curtida ${likeId.toString()} com User ID ${userObjectId.toString()}`);
+            return likeId.equals(userObjectId);
+        });
+        let updatedPost;
+        let action;
+        if (hasLiked) {
+            console.log(`Usuário ${userId} JÁ curtiu a postagem ${postId}. Removendo curtida.`);
+            updatedPost = await postagemRepository.removeLike(postId, userId);
+            action = 'unliked';
+        }
+        else {
+            console.log(`Usuário ${userId} NÃO curtiu a postagem ${postId}. Adicionando curtida.`);
+            updatedPost = await postagemRepository.addLike(postId, userId);
+            action = 'liked';
+        }
+        console.log(`Resultado da operação no repositório. Postagem atualizada: ${updatedPost ? 'Sim' : 'Não'}`);
+        // console.log(`Dados da postagem atualizada: ${JSON.stringify(updatedPost, null, 2)}`); // Descomente para ver o objeto completo
+        if (!updatedPost) {
+            console.error('Erro ao atualizar curtida: Repositório não retornou a postagem atualizada.');
+            return res.status(500).json({ message: 'Erro ao atualizar curtida.' });
+        }
+        console.log(`Sucesso: Postagem ${action} com sucesso. ID: ${postId}, Usuário: ${userId}. Novas curtidas: ${updatedPost.curtidas.length}`);
+        res.status(200).json({
+            message: `Postagem ${action}.`,
+            postagem: updatedPost, // Retorna o objeto da postagem atualizada
+            action: action, // Retorna a ação realizada
+            likesCount: updatedPost.curtidas.length // Retorna a contagem atualizada de curtidas
+        });
+    }
+    catch (error) {
+        console.error('--- Erro capturado no controller toggleLike ---');
+        console.error('Detalhes do erro:', error);
+        res.status(500).json({ message: 'Erro interno do servidor ao alternar curtida.' });
+    }
+    finally {
+        console.log('--- Fim da requisição toggleLike ---');
+    }
+};
+exports.toggleLike = toggleLike;
 //# sourceMappingURL=postagemController.js.map
