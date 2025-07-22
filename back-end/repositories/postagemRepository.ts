@@ -1,4 +1,4 @@
-import { Postagem, IPostagem } from '../models/Postagem';
+import { Postagem, IPostagem, IComentario } from '../models/Postagem';
 import { Types } from 'mongoose';
 
 export interface ICreatePostagemDto {
@@ -7,7 +7,11 @@ export interface ICreatePostagemDto {
     autor: Types.ObjectId;
 }
 
-export interface IUpdatePostagemDto extends Partial<ICreatePostagemDto> { }
+export interface IUpdatePostagemDto extends Partial<ICreatePostagemDto> { 
+    $push?: { comentarios: IComentario }; //adicionei 
+    $set?: any; //opcional
+    curtidas?: number; // opcional
+}
 
 export const create = async (postData: ICreatePostagemDto): Promise<IPostagem> => {
     const novaPostagem = new Postagem(postData);
@@ -31,4 +35,14 @@ export const update = async (id: string, updateData: IUpdatePostagemDto): Promis
 
 export const remove = async (id: string): Promise<IPostagem | null> => {
     return await Postagem.findByIdAndDelete(id);
+
+
+};
+///metodo pra adicionar comentario
+export const addComentario = async (postId: string, comentario: IComentario): Promise<IPostagem | null> => {
+    return await Postagem.findByIdAndUpdate(
+        postId,
+        { $push: { comentarios: comentario } }, // Usa $push para adicionar o novo comentário ao array 'comentarios'
+        { new: true } // Retorna o documento da postagem atualizado após a adição
+    );
 };

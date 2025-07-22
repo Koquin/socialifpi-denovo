@@ -1,23 +1,26 @@
+// socialifpi-denovo/back-end/controllers/postagemController.ts
+
 import { Request, Response } from 'express';
 import { ICreatePostagemDto, IUpdatePostagemDto } from '../repositories/postagemRepository';
 import * as postagemRepository from '../repositories/postagemRepository';
 import { AuthenticatedRequest } from '../middlewares/authMiddleware';
 import { Types } from 'mongoose'; 
 import { Postagem } from '../models/Postagem';
+import { IComentario, IPostagem } from '../models/Postagem';
 
 // GET /postagens
 export const getAllPosts = async (req: Request, res: Response) => {
     try {
         const postagens = await Postagem.find()
-            .populate('autor', 'nome')
+            .populate('autor', 'nome _id') // Incluindo '_id' do autor
             .populate({
                 path: 'compartilhadaDe',
                 populate: {
                     path: 'autor',
-                    select: 'nome'
+                    select: 'nome _id' // Incluindo '_id' do autor da postagem compartilhada
                 }
             })
-            .sort({ data: -1 }); // opcional: mais recentes primeiro
+            .sort({ data: -1 }); 
 
         res.status(200).json(postagens);
     } catch (error) {
@@ -80,17 +83,46 @@ export const updatePost = async (req: Request, res: Response) => {
 // DELETE /postagens/:id
 export const deletePost = async (req: Request, res: Response) => {
     try {
-        const postagemRemovida = await postagemRepository.remove(req.params.id as string);
-        if (!postagemRemovida) {
-            return res.status(404).json({ message: 'Postagem não encontrada' });
+        const postId = req.params.id as string;
+        const userId = (req as AuthenticatedRequest).usuarioId;
+
+        console.log('--- Debug Exclusão de Postagem ---');
+        console.log('ID da Postagem (params.id):', postId);
+        console.log('ID do Usuário Autenticado (req.usuarioId):', userId);
+
+        if (!userId) {
+            console.log('Erro: Usuário não autenticado no controller.');
+            return res.status(401).json({ message: 'Usuário não autenticado.' });
         }
-        res.status(200).json({ message: 'Postagem removida com sucesso' });
+
+        const postagem = await postagemRepository.findById(postId);
+        if (!postagem) {
+            console.log('Erro: Postagem não encontrada no banco de dados.');
+            return res.status(404).json({ message: 'Postagem não encontrada para exclusão.' });
+        }
+        console.log('ID do Autor da Postagem (postagem.autor._id):', postagem.autor._id.toString());
+        console.log('Comparando:', postagem.autor._id.toString(), 'com', userId.toString());
+
+        if (postagem.autor._id.toString() !== userId.toString()) { 
+            console.log('Erro: Usuário não autorizado para excluir esta postagem.');
+            return res.status(403).json({ message: 'Você não tem permissão para excluir esta postagem.' });
+        }
+
+        const postagemRemovida = await postagemRepository.remove(postId);
+
+        if (!postagemRemovida) {
+            console.log('Erro: Postagem não removida apesar de encontrada. Pode ser erro no repository.');
+            return res.status(404).json({ message: 'Postagem não encontrada para exclusão.' });
+        }
+
+        console.log('Sucesso: Postagem excluída.');
+        res.status(200).json({ message: 'Postagem excluída com sucesso.', postagem: postagemRemovida });
     } catch (error) {
-        res.status(500).json({ message: 'Erro ao remover postagem', error });
+        console.error('Erro ao excluir postagem (catch block):', error);
+        res.status(500).json({ message: 'Erro interno do servidor ao excluir postagem.' });
     }
 };
 
-// POST /compartilhar/:id
 // POST /compartilhar/:id
 export const compartilharPostagem = async (req: Request, res: Response) => {
     try {
@@ -121,5 +153,34 @@ export const compartilharPostagem = async (req: Request, res: Response) => {
         res.status(201).json({ mensagem: 'Postagem compartilhada com sucesso!', novaPostagem });
     } catch (erro) {
         res.status(500).json({ erro: 'Erro ao compartilhar postagem.' });
+    }
+};
+//função pra adicionar comentario
+export const addCommentToPost = async (req: Request, res: Response) => {
+    try {
+        const postId = req.params.id as string; 
+        const { body, autor } = req.body; 
+
+        if (!body) {
+            return res.status(400).json({ message: 'O conteúdo do comentário é obrigatório.' });
+        }
+        const novoComentario: IComentario = {
+            body: body,
+            date: new Date(), // A data do comentário será a data atual
+            autor: autor, // Usa o nome do autor fornecido ou 'Anônimo' se não for fornecido
+        };
+
+        // Chama o método do repositório para adicionar o comentário
+        const postagemAtualizada = await postagemRepository.addComentario(postId, novoComentario);
+
+        if (!postagemAtualizada) {
+            return res.status(404).json({ message: 'Postagem não encontrada para adicionar comentário.' });
+        }
+
+        // Retorna a postagem atualizada com o novo comentário
+        res.status(201).json(postagemAtualizada);
+    } catch (error) {
+        console.error('Erro ao adicionar comentário:', error);
+        res.status(500).json({ message: 'Erro interno do servidor ao adicionar comentário.' });
     }
 };

@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.remove = exports.update = exports.findById = exports.findAll = exports.create = void 0;
+exports.addComentario = exports.remove = exports.update = exports.findById = exports.findAll = exports.create = void 0;
 const Postagem_1 = require("../models/Postagem");
 const create = async (postData) => {
     const novaPostagem = new Postagem_1.Postagem(postData);
@@ -26,4 +26,11 @@ const remove = async (id) => {
     return await Postagem_1.Postagem.findByIdAndDelete(id);
 };
 exports.remove = remove;
+///metodo pra adicionar comentario
+const addComentario = async (postId, comentario) => {
+    return await Postagem_1.Postagem.findByIdAndUpdate(postId, { $push: { comentarios: comentario } }, // Usa $push para adicionar o novo comentário ao array 'comentarios'
+    { new: true } // Retorna o documento da postagem atualizado após a adição
+    );
+};
+exports.addComentario = addComentario;
 //# sourceMappingURL=postagemRepository.js.map

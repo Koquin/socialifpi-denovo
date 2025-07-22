@@ -9,9 +9,11 @@ const mongoose_1 = __importDefault(require("mongoose"));
 const cors_1 = __importDefault(require("cors"));
 const postagemRoutes_1 = __importDefault(require("./routes/postagemRoutes"));
 const usuarioRoutes_1 = __importDefault(require("./routes/usuarioRoutes"));
+const path_1 = __importDefault(require("path"));
 const app = (0, express_1.default)();
 app.use((0, cors_1.default)());
 app.use(express_1.default.json());
+app.use(express_1.default.static(path_1.default.join(__dirname, '../../front-end')));
 const connectDB = async () => {
     try {
         await mongoose_1.default.connect("mongodb+srv://iagojrdc:nLsp6dWJesfO62QD@socialifpi.ywrquky.mongodb.net/?retryWrites=true&w=majority&appName=socialifpi");

@@ -1,4 +1,5 @@
 "use strict";
+// socialifpi-denovo/back-end/controllers/postagemController.ts
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     var desc = Object.getOwnPropertyDescriptor(m, k);
@@ -15,15 +16,25 @@ var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (
 }) : function(o, v) {
     o["default"] = v;
 });
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.compartilharPostagem = exports.deletePost = exports.updatePost = exports.createPost = exports.getPostById = exports.getAllPosts = void 0;
+exports.addCommentToPost = exports.compartilharPostagem = exports.deletePost = exports.updatePost = exports.createPost = exports.getPostById = exports.getAllPosts = void 0;
 const postagemRepository = __importStar(require("../repositories/postagemRepository"));
 const mongoose_1 = require("mongoose");
 const Postagem_1 = require("../models/Postagem");
@@ -31,12 +42,12 @@ const Postagem_1 = require("../models/Postagem");
 const getAllPosts = async (req, res) => {
     try {
         const postagens = await Postagem_1.Postagem.find()
-            .populate('autor', 'nome')
+            .populate('autor', 'nome _id') // Incluindo '_id' do autor
             .populate({
             path: 'compartilhadaDe',
             populate: {
                 path: 'autor',
-                select: 'nome'
+                select: 'nome _id' // Incluindo '_id' do autor da postagem compartilhada
             }
         })
             .sort({ data: -1 }); // opcional: mais recentes primeiro
@@ -101,18 +112,42 @@ exports.updatePost = updatePost;
 // DELETE /postagens/:id
 const deletePost = async (req, res) => {
     try {
-        const postagemRemovida = await postagemRepository.remove(req.params.id);
-        if (!postagemRemovida) {
-            return res.status(404).json({ message: 'Postagem não encontrada' });
+        const postId = req.params.id;
+        const userId = req.usuarioId;
+        console.log('--- Debug Exclusão de Postagem ---');
+        console.log('ID da Postagem (params.id):', postId);
+        console.log('ID do Usuário Autenticado (req.usuarioId):', userId);
+        if (!userId) {
+            console.log('Erro: Usuário não autenticado no controller.');
+            return res.status(401).json({ message: 'Usuário não autenticado.' });
         }
-        res.status(200).json({ message: 'Postagem removida com sucesso' });
+        const postagem = await postagemRepository.findById(postId);
+        if (!postagem) {
+            console.log('Erro: Postagem não encontrada no banco de dados.');
+            return res.status(404).json({ message: 'Postagem não encontrada para exclusão.' });
+        }
+        // <--- ALTERADO AQUI: Comparando postagem.autor._id com userId ---
+        console.log('ID do Autor da Postagem (postagem.autor._id):', postagem.autor._id.toString());
+        console.log('Comparando:', postagem.autor._id.toString(), 'com', userId.toString());
+        if (postagem.autor._id.toString() !== userId.toString()) { // <--- CORREÇÃO AQUI
+            console.log('Erro: Usuário não autorizado para excluir esta postagem.');
+            return res.status(403).json({ message: 'Você não tem permissão para excluir esta postagem.' });
+        }
+        // -----------------------------------------------------------------
+        const postagemRemovida = await postagemRepository.remove(postId);
+        if (!postagemRemovida) {
+            console.log('Erro: Postagem não removida apesar de encontrada. Pode ser erro no repository.');
+            return res.status(404).json({ message: 'Postagem não encontrada para exclusão.' });
+        }
+        console.log('Sucesso: Postagem excluída.');
+        res.status(200).json({ message: 'Postagem excluída com sucesso.', postagem: postagemRemovida });
     }
     catch (error) {
-        res.status(500).json({ message: 'Erro ao remover postagem', error });
+        console.error('Erro ao excluir postagem (catch block):', error);
+        res.status(500).json({ message: 'Erro interno do servidor ao excluir postagem.' });
     }
 };
 exports.deletePost = deletePost;
-// POST /compartilhar/:id
 // POST /compartilhar/:id
 const compartilharPostagem = async (req, res) => {
     try {
@@ -141,4 +176,31 @@ const compartilharPostagem = async (req, res) => {
     }
 };
 exports.compartilharPostagem = compartilharPostagem;
+//função pra adicionar comentario
+const addCommentToPost = async (req, res) => {
+    try {
+        const postId = req.params.id;
+        const { body, autor } = req.body;
+        if (!body) {
+            return res.status(400).json({ message: 'O conteúdo do comentário é obrigatório.' });
+        }
+        const novoComentario = {
+            body: body,
+            date: new Date(), // A data do comentário será a data atual
+            autor: autor, // Usa o nome do autor fornecido ou 'Anônimo' se não for fornecido
+        };
+        // Chama o método do repositório para adicionar o comentário
+        const postagemAtualizada = await postagemRepository.addComentario(postId, novoComentario);
+        if (!postagemAtualizada) {
+            return res.status(404).json({ message: 'Postagem não encontrada para adicionar comentário.' });
+        }
+        // Retorna a postagem atualizada com o novo comentário
+        res.status(201).json(postagemAtualizada);
+    }
+    catch (error) {
+        console.error('Erro ao adicionar comentário:', error);
+        res.status(500).json({ message: 'Erro interno do servidor ao adicionar comentário.' });
+    }
+};
+exports.addCommentToPost = addCommentToPost;
 //# sourceMappingURL=postagemController.js.map
