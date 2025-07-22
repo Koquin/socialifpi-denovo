@@ -9,7 +9,7 @@
 </head>
 
 <body>
-    <!-- Modal de compartilhamento -->
+
     <div id="modalCompartilhar" class="modal" style="display: none;">
         <div class="modal-content">
             <h2>Compartilhar postagem</h2>
@@ -21,7 +21,6 @@
                 <button class="emoji-btn">👏</button>
                 <button class="emoji-btn">💡</button>
             </div>
-
             <div class="modal-buttons">
                 <button id="confirmarCompartilhamento">Compartilhar</button>
                 <button id="cancelarCompartilhamento">Cancelar</button>
@@ -29,31 +28,29 @@
         </div>
     </div>
 
+    <header>
+        <h1>Social IFPI</h1>
+        <p>Bem-vindo ao blog de tecnologia e inovação do IFPI</p>
+
+        <button id="btnMenu" aria-label="Abrir menu" class="btn-menu">
+            ⠿
+        </button>
+
+        <nav id="menuNavegacao" class="menu-lateral" aria-label="Menu lateral">
+            <ul>
+                <li><a href="#" id="linkHome">Home</a></li>
+                <li><a href="#" id="linkSobre">Sobre</a></li>
+                <li><a href="#" id="linkContato">Contato</a></li>
+                <li><a href="#" id="botaoLogout">Sair</a></li>
+            </ul>
+        </nav>
+    </header>
+
     <div id="container">
-        <header>
-            <h1>Social IFPI</h1>
-            <p>Bem-vindo ao blog de tecnologia e inovação do IFPI</p>
 
-            <!-- Menu de navegação oculto inicialmente -->
-            <nav id="menuNavegacao" style="display: none;">
-                <ul>
-                    <li><a href="#">Home</a></li>
-                    <li><a href="#">Sobre</a></li>
-                    <li><a href="#">Contato</a></li>
-                    <li><a href="#">Blog</a></li>
-                    <li><a href="#">Portfólio</a></li>
-                </ul>
-            </nav>
-
-            <!-- Botão de logout, inicialmente oculto -->
-            <button id="botaoLogout" style="display: none; margin-top: 10px;">Sair</button>
-        </header>
-
-        <!-- Seção de autenticação -->
         <section id="autenticacao">
             <h1 class="titulo-auth">FAÇA LOGIN OU CADASTRE-SE</h1>
 
-            <!-- Login -->
             <div class="campos" id="loginForm">
                 <h2>Login</h2>
                 <input type="email" id="email" placeholder="Email" required />
@@ -62,7 +59,6 @@
                 <p>Não tem conta? <a href="#" id="mostrarCadastro">Registre-se</a></p>
             </div>
 
-            <!-- Cadastro -->
             <div class="campos" id="cadastroForm" style="display: none;">
                 <h2>Cadastro</h2>
                 <input type="text" id="novoUsuario" placeholder="Nome" required />
@@ -72,8 +68,6 @@
                 <p>Já tem conta? <a href="#" id="mostrarLogin">Faça login</a></p>
             </div>
         </section>
-
-        <!-- Conteúdo principal (visível após login) -->
 
         <main id="areaPrincipal" style="display: none;">
             <div id="usuarioLogado" style="margin-bottom: 20px; font-weight: bold;"></div>
@@ -91,24 +85,66 @@
                 </div>
             </section>
 
-            <!-- Filtro por nome de usuário -->
             <section id="filtroUsuarioContainer">
                 <input type="text" id="filtroUsuario" placeholder="Filtrar por nome de usuário..." />
                 <button id="botaoFiltrar">Filtrar</button>
                 <button id="botaoLimparFiltro">Limpar</button>
             </section>
 
-            <!-- Lista de postagens -->
             <section id="postagens"></section>
         </main>
 
-        <footer>
-            <p>&copy; 2025 Social IFPI. Todos os direitos reservados.</p>
-            <p>Feito com ♡ pela equipe do IFPI.</p>
-        </footer>
+        <section id="sobreNos" style="display: none;">
+            <h2>Sobre Nós</h2>
+            <p>Este é o projeto final da disciplina Programação para Internet I, desenvolvido em equipe no curso de
+                Tecnologia em Análise e Desenvolvimento de Sistemas (TADS), com front-end em HTML, CSS e JavaScript, e
+                back-end com Node.js utilizando o framework Express. A aplicação consiste em um blog completo com
+                persistência em banco de dados, suporte a comentários e funcionalidades extras relevantes ao contexto de
+                um blog.</p>
+            <p>Somos alunos dedicados, orientados pelo professor Ely Miranda, que nos guiou com empenho e dedicação
+                durante todo o desenvolvimento deste projeto. Sob sua supervisão, aprendemos a trabalhar em equipe,
+                aplicar boas práticas de programação e desenvolver uma aplicação funcional e integrada.</p>
+
+            <div style="display: flex; gap: 40px; flex-wrap: wrap; margin-top: 20px; justify-content: center;">
+                <div class="membro" style="text-align: center;">
+                    <img src="https://avatars.githubusercontent.com/u/159504455?v=4" alt="Foto da Alanda" />
+                    <p>Alanda Amábily</p>
+                </div>
+                <div class="membro" style="text-align: center;">
+                    <img src="https://avatars.githubusercontent.com/u/111695269?v=4" alt="Foto do Iago" />
+                    <p>Iago José</p>
+                </div>
+                <div class="membro" style="text-align: center;">
+                    <img src="https://avatars.githubusercontent.com/u/199284209?s=400&u=91a13abb87aa915088544c5b70bae3545ca8ac1b&v=4"
+                        alt="Foto da Izadora Pamella" />
+                    <p>Izadora Pamella</p>
+                </div>
+                <div class="membro" style="text-align: center;">
+                    <img src="sara.jpeg" alt="Foto da Shara Cristtina" />
+                    <p>Shara Cristtina</p>
+                </div>
+            </div>
+
+            <button id="fecharSobre">Fechar</button>
+        </section>
+
+        <section id="contato" style="display: none;">
+            <h2>Contato</h2>
+            <p>Acesse os perfis no GitHub dos integrantes:</p>
+            <ul>
+                <li><a href="https://github.com/Alanda13" target="_blank" rel="noopener noreferrer">Alanda Amábily</a>
+                </li>
+                <li><a href="https://github.com/Koquin" target="_blank" rel="noopener noreferrer">Iago José</a></li>
+                <li><a href="https://github.com/izadorapam/izadorapam" target="_blank" rel="noopener noreferrer">Izadora
+                        Pamella</a></li>
+                <li><a href="https://github.com/Shara-Cristtina-SL" target="_blank" rel="noopener noreferrer">Shara
+                        Cristtina</a></li>
+            </ul>
+            <button id="fecharContato">Fechar</button>
+        </section>
+
     </div>
 
-    <!-- Modal de Confirmação de Exclusão -->
     <div id="modalConfirmacaoExclusao" style="
         display: none; /* Oculto por padrão */
         position: fixed; /* Fica por cima de tudo */
@@ -156,6 +192,11 @@
             ">Cancelar</button>
         </div>
     </div>
+
+    <footer>
+        <p>&copy; 2025 Social IFPI. Todos os direitos reservados.</p>
+        <p>Feito com ♡ pela equipe do IFPI.</p>
+    </footer>
 
     <script src="app.js"></script>
 </body>
