@@ -25,11 +25,11 @@ Este é o projeto final da disciplina **Programação para Internet I**, desenvo
 1. **Autenticação de usuários**  
    - Sistema de login e registro com verificação de credenciais.
 
-2. **Curtidas nas postagens**  
-   - Usuários podem curtir postagens. O número de curtidas é exibido.
+2. **Compartilhamento de postagens**  
+   - Usuários podem compartilhar postagens de outros usuários e adicionar respostas e reações a elas.
 
 3. **Busca de postagens**  
-   - Campo de busca para filtrar postagens por título ou conteúdo.
+   - Campo de busca para filtrar postagens por nome de usuário.
 
 ---
 
