@@ -50,7 +50,7 @@ const getAllPosts = async (req, res) => {
                 select: 'nome _id' // Incluindo '_id' do autor da postagem compartilhada
             }
         })
-            .sort({ data: -1 }); // opcional: mais recentes primeiro
+            .sort({ data: -1 });
         res.status(200).json(postagens);
     }
     catch (error) {
@@ -126,14 +126,12 @@ const deletePost = async (req, res) => {
             console.log('Erro: Postagem não encontrada no banco de dados.');
             return res.status(404).json({ message: 'Postagem não encontrada para exclusão.' });
         }
-        // <--- ALTERADO AQUI: Comparando postagem.autor._id com userId ---
         console.log('ID do Autor da Postagem (postagem.autor._id):', postagem.autor._id.toString());
         console.log('Comparando:', postagem.autor._id.toString(), 'com', userId.toString());
-        if (postagem.autor._id.toString() !== userId.toString()) { // <--- CORREÇÃO AQUI
+        if (postagem.autor._id.toString() !== userId.toString()) {
             console.log('Erro: Usuário não autorizado para excluir esta postagem.');
             return res.status(403).json({ message: 'Você não tem permissão para excluir esta postagem.' });
         }
-        // -----------------------------------------------------------------
         const postagemRemovida = await postagemRepository.remove(postId);
         if (!postagemRemovida) {
             console.log('Erro: Postagem não removida apesar de encontrada. Pode ser erro no repository.');

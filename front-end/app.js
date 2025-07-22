@@ -2,7 +2,7 @@
 
 "use strict";
 
-// Definida fora do DOMContentLoaded para ser acessível globalmente
+// acessível globalmente
 function performLogout() {
     localStorage.removeItem("token");
     localStorage.removeItem("id");
@@ -160,9 +160,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 throw new Error("Erro ao criar postagem.");
             }
 
-            // <--- ADICIONADO AQUI: Mensagem de sucesso para criação de postagem ---
             alert("Postagem criada com sucesso!");
-            // ---------------------------------------------------------------------
 
             document.getElementById("titulo").value = "";
             document.getElementById("conteudo").value = "";
@@ -257,7 +255,8 @@ document.addEventListener("DOMContentLoaded", () => {
                     data.textContent = new Date(postagem.createdAt || postagem.data).toLocaleString();
 
                     article.append(titulo, conteudo, data, infoAutor);
-                    
+
+                    // --- SEÇÃO DE BOTÕES (COMENTÁRIOS, COMPARTILHAR, EXCLUIR) ---
                     const buttonContainer = document.createElement('div');
                     buttonContainer.style.cssText = `
                         display: flex;
@@ -508,7 +507,15 @@ document.addEventListener("DOMContentLoaded", () => {
                 throw new Error(`Erro ao carregar comentários: ${response.statusText}`);
             }
             const postData = await response.json();
-            const comments = postData.comentarios || postData.comments || [];
+            let comments = postData.comentarios || postData.comments || [];
+
+            // Ordenar comentários por data decrescente 
+            // Para ordenar decrescente (mais recente primeiro)
+            comments.sort((a, b) => {
+                const dateA = new Date(a.date);
+                const dateB = new Date(b.date);
+                return dateB.getTime() - dateA.getTime(); // Mais recente primeiro
+            });
 
             commentsListDiv.innerHTML = '';
             if (comments.length === 0) {
@@ -576,14 +583,14 @@ document.addEventListener("DOMContentLoaded", () => {
                 body: JSON.stringify({
                     body: content,
                     autor: author,
-                    date: new Date().toISOString()
+                    date: new Date().toISOString() // Garante que a data é salva em formato ISO string
                 }),
             });
 
             if (response.ok) {
                 alert('Comentário adicionado com sucesso!');
                 if (commentContentInput) commentContentInput.value = '';
-                await loadCommentsForPost(postId);
+                await loadCommentsForPost(postId); // Recarrega os comentários para mostrar a nova ordem
             } else {
                 const errorData = await response.json();
                 if (response.status === 401 || response.status === 403) {
@@ -653,3 +660,4 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 });
+

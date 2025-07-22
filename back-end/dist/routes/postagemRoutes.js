@@ -42,7 +42,7 @@ router.get('/', postagemController.getAllPosts);
 router.get('/:id', postagemController.getPostById);
 router.post('/', authMiddleware_1.autenticarToken, postagemController.createPost);
 router.put('/:id', postagemController.updatePost);
-router.delete('/:id', authMiddleware_1.autenticarToken, postagemController.deletePost); // <--- SUA PARTE: Rota DELETE
+router.delete('/:id', authMiddleware_1.autenticarToken, postagemController.deletePost);
 router.post('/compartilhar/:id', postagemController.compartilharPostagem);
 router.post('/:id/comentarios', authMiddleware_1.autenticarToken, postagemController.addCommentToPost);
 exports.default = router;
